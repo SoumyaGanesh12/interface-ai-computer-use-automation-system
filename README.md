@@ -39,6 +39,16 @@ anything above it -- and the test suite.
 - `src/locator/resolve.ts` -- tries a descriptor's candidates in order against an
   observation; a unique match that's disabled or hidden stops immediately rather than
   falling through to a weaker, possibly-wrong tier.
+- `src/matcher/types.ts` -- the `Matcher` predicate type (booleans only) shared by
+  checkpoints, outcome detection, recovery detection, and step waits.
+- `src/matcher/evaluate.ts` -- the one evaluator. Never throws; an invalid regex in an
+  artifact fails the match instead of crashing the run. Ambiguous resolver results never
+  count as "exists" or "absent" -- a presence check can't smuggle in the coin flip the
+  resolver already refuses to make.
+- `src/matcher/extraction.ts` -- the value-producing counterpart to `Matcher`, plus the
+  closed, reviewable transform registry (`trim`, `currency`, `integer`, `date`,
+  `regexCapture`). An unresolved target or a failed transform is always a distinct
+  failure, never a silently corrupted success.
 - `.dependency-cruiser.cjs` -- the boundary rules, wired before any code they govern.
 
 The artifact schema and deterministic replay are built and proven out before the
