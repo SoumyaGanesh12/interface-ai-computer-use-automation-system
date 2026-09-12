@@ -8,8 +8,9 @@
  */
 import type { Action, ActionResult } from './action';
 import type { Observation } from './observation';
+import type { Allowlist } from '../policy/allowlist';
 
-/** A pointer to what capture() produced -- expanded once the evidence writer exists. */
+/** A pointer to what capture() produced. */
 export interface EvidenceRef {
   runId: string;
   screenshotPath: string;
@@ -21,6 +22,10 @@ export interface Surface {
   observe(): Promise<Observation>;
   /** The single policy choke point: every dispatched action passes through here. */
   act(action: Action): Promise<ActionResult>;
+  /** The allowlist an act() call is checked against, from now until the next call. Any caller driving this Surface gets the same guardrail, not just the one that remembered to check it. */
+  setPolicy(policy: Allowlist): void;
+  /** Which run this Surface is currently acting for -- tags observe()'s output and where capture() saves evidence. Lets one Surface instance run several artifacts in sequence without its evidence landing under the wrong run's folder. */
+  setRunId(runId: string): void;
   capture(): Promise<EvidenceRef>;
   close(): Promise<void>;
 }

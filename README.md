@@ -117,6 +117,29 @@ not a crash. Conflating the two is an easy way to get this kind of system wrong.
   desktop adapter would have to assume.
 - `src/surface/playwright-surface.ts` -- the one `Surface` implementation, wiring the
   above together. Headed by default (human takeover needs an operable window later).
+- `src/catalog/` -- the capability contract: `step.ts` (one step, shared by the main
+  flow and a recovery sub-flow), `recovery.ts` (`runSteps` | `preflight`, every
+  `runSteps` step forced `risk: 'safe'`), `artifact.ts` (the full schema), `validate.ts`
+  (schema-version check, then shape, then matcher-overlap), `overlap.ts` (deliberately
+  conservative -- structural equality or one pattern containing another, not a general
+  overlap prover), `interpolate.ts` (`{{param}}` templates, scoped to action text/url/
+  option and idempotency keys, never locator fields).
+- `src/replay/executor.ts` -- runs an artifact with no model in the loop. Recovery is
+  checked before outcomes at every re-entry; an irreversible step tracks whether it's
+  already dispatched this run so a checkpoint failure never redispatches it; outcomes
+  are checked once more after the last step, not just between steps, since a result
+  like "not found" often only becomes visible after the final action.
+- `src/policy/` -- `allowlist.ts` (checked inside `Surface.act` itself -- the single
+  choke point, so any caller driving the surface gets the same guardrail),
+  `credentials.ts` (`CredentialProvider`; a reference resolves to a secret only inside
+  the surface, never elsewhere), `redact.ts` (the write boundary: an artifact's
+  declared-sensitive inputs never reach a log verbatim).
+- `src/evidence/writer.ts` -- one event stream, two sinks: `/evidence/<runId>/` (this
+  run) and `/audit/` (every run, append-only). Every exit path in the executor goes
+  through one `finish()` call, so a run can't complete without being logged.
+- `artifacts/member-savings-balance@1.0.0.json` -- a hand-written capability matching
+  the task "look up a member and read their savings balance," proven against the real
+  fixture end to end (`tests/replay/executor.test.ts`).
 - `.dependency-cruiser.cjs` -- the boundary rules, wired before any code they govern.
 
 The artifact schema and deterministic replay are built and proven out before the

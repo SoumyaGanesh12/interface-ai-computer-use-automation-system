@@ -16,6 +16,7 @@ import { validateArtifact } from '../../src/catalog/validate';
 import type { Artifact } from '../../src/catalog/artifact';
 import { replay } from '../../src/replay/executor';
 import { createPlaywrightWebSurface } from '../../src/surface/playwright-surface';
+import { generateRunId } from '../../src/evidence/run-id';
 import type { Surface } from '../../src/surface/surface';
 
 const ARTIFACT_PATH = 'artifacts/member-savings-balance@1.0.0.json';
@@ -46,7 +47,10 @@ beforeAll(async () => {
   surface = await createPlaywrightWebSurface({
     runId: 'executor-test',
     headless: true,
-    resolveCredential: (ref) => (ref === 'FIXTURE_OPERATOR_PASSWORD' ? 'fixture-only-not-a-real-secret' : ''),
+    // Overridden by replay() via setPolicy() before any action dispatches, using
+    // whichever artifact is actually running -- this is just a construction-time default.
+    policy: { allowedOrigins: [new URL(baseUrl).origin], allowedActions: ['navigate', 'click', 'type', 'typeCredential'] },
+    credentials: { resolve: (ref) => (ref === 'FIXTURE_OPERATOR_PASSWORD' ? 'fixture-only-not-a-real-secret' : '') },
   });
 }, 30000);
 
@@ -66,7 +70,7 @@ describe('replay: member-savings-balance', () => {
     if (!validated.ok) throw new Error(validated.reason);
     const artifact = retarget(validated.artifact, baseUrl);
 
-    const result = await replay(artifact, { memberId: '41382' }, { surface, runId: 'test-run-1' });
+    const result = await replay(artifact, { memberId: '41382' }, { surface, runId: generateRunId(artifact.capability.id) });
 
     expect(result.status).toBe('success');
     expect(result.outputs?.savingsBalance).toBe(1204.5);
@@ -79,7 +83,7 @@ describe('replay: member-savings-balance', () => {
     if (!validated.ok) throw new Error(validated.reason);
     const artifact = retarget(validated.artifact, baseUrl);
 
-    const result = await replay(artifact, { memberId: '00000' }, { surface, runId: 'test-run-2' });
+    const result = await replay(artifact, { memberId: '00000' }, { surface, runId: generateRunId(artifact.capability.id) });
 
     expect(result.status).toBe('business_outcome');
     expect(result.outcome?.code).toBe('member_not_found');

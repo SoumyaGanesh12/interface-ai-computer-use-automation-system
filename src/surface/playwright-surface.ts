@@ -8,21 +8,21 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { perceive } from './perceive';
 import { performAction } from './act';
+import { EnvCredentialProvider, type CredentialProvider } from '../policy/credentials';
+import type { Allowlist } from '../policy/allowlist';
+import { runEvidenceDir } from '../evidence/paths';
 import type { Action, ActionResult } from './action';
 import type { Observation } from './observation';
 import type { EvidenceRef, Surface } from './surface';
 
 export interface PlaywrightSurfaceOptions {
   runId: string;
+  /** No permissive default: an unconfigured surface can act on nothing, not everything. */
+  policy: Allowlist;
   headless?: boolean;
+  /** Overrides the derived evidence directory entirely; otherwise derived from the current runId. */
   evidenceDir?: string;
-  /**
-   * Bridge until a dedicated CredentialProvider formalizes injection at session start:
-   * credentialRef is read as an env var name directly. The seam it stands in for is
-   * real either way -- a reference resolved inside the surface, never a literal value
-   * in an action or artifact.
-   */
-  resolveCredential?: (ref: string) => string;
+  credentials?: CredentialProvider;
 }
 
 export async function createPlaywrightWebSurface(opts: PlaywrightSurfaceOptions): Promise<Surface> {
@@ -34,27 +34,39 @@ export async function createPlaywrightWebSurface(opts: PlaywrightSurfaceOptions)
   await cdp.send('Page.enable');
 
   let seq = 0;
-  const evidenceDir = opts.evidenceDir ?? path.join('evidence', opts.runId);
-  const resolveCredential = opts.resolveCredential ?? ((ref: string) => process.env[ref] ?? '');
+  let policy = opts.policy;
+  let runId = opts.runId;
+  const credentials = opts.credentials ?? new EnvCredentialProvider();
 
   return {
     async observe(): Promise<Observation> {
-      const { observation } = await perceive(page, cdp, opts.runId, seq++);
+      const { observation } = await perceive(page, cdp, runId, seq++);
       return observation;
     },
 
     async act(action: Action): Promise<ActionResult> {
-      return performAction(page, cdp, opts.runId, seq++, action, resolveCredential);
+      return performAction(page, cdp, runId, seq++, action, credentials, policy);
+    },
+
+    setPolicy(next: Allowlist): void {
+      policy = next;
+    },
+
+    setRunId(next: string): void {
+      runId = next;
     },
 
     async capture(): Promise<EvidenceRef> {
-      await mkdir(evidenceDir, { recursive: true });
-      const stamp = Date.now();
-      const screenshotPath = path.join(evidenceDir, `${stamp}.png`);
-      const domSnapshotPath = path.join(evidenceDir, `${stamp}.html`);
+      const dir = opts.evidenceDir ?? runEvidenceDir(runId);
+      await mkdir(dir, { recursive: true });
+      // Fixed names, not timestamped: today a run captures at most once (its terminal
+      // failure). This will need a per-capture suffix once escalation can also
+      // capture mid-run -- more than one capture per run would silently overwrite.
+      const screenshotPath = path.join(dir, 'screenshot.png');
+      const domSnapshotPath = path.join(dir, 'snapshot.html');
       await page.screenshot({ path: screenshotPath });
       await writeFile(domSnapshotPath, await page.content(), 'utf-8');
-      return { runId: opts.runId, screenshotPath, domSnapshotPath, capturedAt: new Date().toISOString() };
+      return { runId, screenshotPath, domSnapshotPath, capturedAt: new Date().toISOString() };
     },
 
     async close(): Promise<void> {

@@ -12,6 +12,8 @@ import type { CDPSession, Page } from 'playwright';
 import { resolve } from '../locator/resolve';
 import { resolveElementHandle } from './element-handle';
 import { perceive } from './perceive';
+import { checkPolicy, type Allowlist } from '../policy/allowlist';
+import type { CredentialProvider } from '../policy/credentials';
 import type { Action, ActionResult } from './action';
 
 export async function performAction(
@@ -20,8 +22,14 @@ export async function performAction(
   runId: string,
   seq: number,
   action: Action,
-  resolveCredential: (ref: string) => string,
+  credentials: CredentialProvider,
+  policy: Allowlist,
 ): Promise<ActionResult> {
+  const policyResult = checkPolicy(action, policy);
+  if (!policyResult.allowed) {
+    return { ok: false, reason: 'policy_denied', detail: policyResult.reason ?? 'denied' };
+  }
+
   if (action.kind === 'navigate') {
     await page.goto(action.url);
     return { ok: true };
@@ -67,7 +75,7 @@ export async function performAction(
       await page.mouse.click(center.x, center.y, { delay: 50 });
       await page.keyboard.press('Control+A');
       await page.keyboard.press('Delete');
-      const text = action.kind === 'typeCredential' ? resolveCredential(action.credentialRef) : action.text;
+      const text = action.kind === 'typeCredential' ? credentials.resolve(action.credentialRef) : action.text;
       await page.keyboard.type(text);
       return { ok: true, resolvedTier: tier };
     }

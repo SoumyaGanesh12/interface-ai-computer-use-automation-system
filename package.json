@@ -10,7 +10,7 @@
   "scripts": {
     "fixture": "tsx fixture/server.ts",
     "typecheck": "tsc --noEmit",
-    "boundaries": "depcruise src fixture --config .dependency-cruiser.cjs",
+    "boundaries": "depcruise src fixture tests --config .dependency-cruiser.cjs",
     "test": "vitest run",
     "check": "npm run typecheck && npm run boundaries && npm run test"
   },

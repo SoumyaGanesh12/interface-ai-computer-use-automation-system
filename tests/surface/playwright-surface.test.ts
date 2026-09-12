@@ -27,7 +27,8 @@ beforeAll(async () => {
   surface = await createPlaywrightWebSurface({
     runId: 'integration-test',
     headless: true,
-    resolveCredential: (ref) => (ref === 'TEST_PASSWORD' ? 'fixture-only-not-a-real-secret' : ''),
+    policy: { allowedOrigins: [new URL(baseUrl).origin], allowedActions: ['navigate', 'click', 'type', 'typeCredential', 'read'] },
+    credentials: { resolve: (ref) => (ref === 'TEST_PASSWORD' ? 'fixture-only-not-a-real-secret' : '') },
   });
 }, 30000);
 
@@ -118,4 +119,16 @@ describe('PlaywrightWebSurface against the real fixture', () => {
     expect(balanceRead.ok).toBe(true);
     if (balanceRead.ok) expect(balanceRead.value).toContain('1204.50');
   }, 30000);
+
+  it('rejects an action outside the current policy before touching the page', async () => {
+    surface.setPolicy({ allowedOrigins: [new URL(baseUrl).origin], allowedActions: ['navigate'] }); // click not permitted
+    const result = await surface.act({
+      kind: 'click',
+      target: target(1, 'irrelevant -- should be denied before resolution', { strategy: 'roleAndName', role: 'button', name: 'Log In' }),
+    });
+    expect(result).toMatchObject({ ok: false, reason: 'policy_denied' });
+
+    // Restore, in case this file's test order ever changes.
+    surface.setPolicy({ allowedOrigins: [new URL(baseUrl).origin], allowedActions: ['navigate', 'click', 'type', 'typeCredential', 'read'] });
+  });
 });

@@ -33,7 +33,7 @@ export const ActionResultSchema = z.discriminatedUnion('ok', [
   }),
   z.object({
     ok: z.literal(false),
-    reason: z.enum(['unresolved', 'ambiguous', 'not_enabled', 'not_visible', 'timeout']),
+    reason: z.enum(['unresolved', 'ambiguous', 'not_enabled', 'not_visible', 'timeout', 'policy_denied']),
     detail: z.string(),
   }),
 ]);
