@@ -1,0 +1,24 @@
+{
+  "name": "computer-use-automation-system",
+  "version": "0.0.0",
+  "description": "LLM discovers a UI flow once; the run compiles into a typed versioned capability that replays deterministically with no model in the decision loop.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "boundaries": "depcruise src --config .dependency-cruiser.cjs",
+    "check": "npm run typecheck && npm run boundaries"
+  },
+  "dependencies": {
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "dependency-cruiser": "^16.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

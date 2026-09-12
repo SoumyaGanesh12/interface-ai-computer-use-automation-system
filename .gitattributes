@@ -1,0 +1,6 @@
+# Authored on Windows, reviewed on macOS and Linux. Normalize to LF in the repo so
+# diffs stay readable for whoever reads this.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webm binary
