@@ -34,6 +34,11 @@ anything above it -- and the test suite.
   on a UI and everything above it.
 - `src/locator/descriptor.ts` -- the five-tier locator ladder, with the tier a candidate
   claims validated against the strategy it actually uses.
+- `src/locator/strategies/` -- one file per tier's matching logic (role+name, label
+  proximity, visible text, structural path, anchored coordinates).
+- `src/locator/resolve.ts` -- tries a descriptor's candidates in order against an
+  observation; a unique match that's disabled or hidden stops immediately rather than
+  falling through to a weaker, possibly-wrong tier.
 - `.dependency-cruiser.cjs` -- the boundary rules, wired before any code they govern.
 
 The artifact schema and deterministic replay are built and proven out before the

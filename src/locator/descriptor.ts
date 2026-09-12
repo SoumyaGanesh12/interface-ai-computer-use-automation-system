@@ -11,16 +11,16 @@ import * as z from 'zod';
 import { RoleSchema } from '../surface/observation';
 
 export const LocatorStrategySchema = z.discriminatedUnion('strategy', [
-  z.object({ strategy: z.literal('roleAndName'), role: RoleSchema, name: z.string(), exact: z.boolean().optional() }),
+  z.object({ strategy: z.literal('roleAndName'), role: RoleSchema, name: z.string().min(1), exact: z.boolean().optional() }),
   z.object({
     strategy: z.literal('labelProximity'),
-    labelText: z.string(),
+    labelText: z.string().min(1),
     direction: z.enum(['right', 'below', 'same-cell']),
     role: RoleSchema.optional(),
   }),
-  z.object({ strategy: z.literal('visibleText'), text: z.string(), role: RoleSchema.optional() }),
-  z.object({ strategy: z.literal('structuralPath'), framePath: z.array(z.string()), path: z.string() }),
-  z.object({ strategy: z.literal('anchoredCoordinates'), anchorName: z.string(), dx: z.number(), dy: z.number() }),
+  z.object({ strategy: z.literal('visibleText'), text: z.string().min(1), role: RoleSchema.optional() }),
+  z.object({ strategy: z.literal('structuralPath'), framePath: z.array(z.string()), path: z.string().min(1) }),
+  z.object({ strategy: z.literal('anchoredCoordinates'), anchorName: z.string().min(1), dx: z.number(), dy: z.number() }),
 ]);
 export type LocatorStrategy = z.infer<typeof LocatorStrategySchema>;
 
