@@ -52,6 +52,12 @@ export async function performAction(
       // the resulting form POST at all). A small delay is Playwright's own documented
       // mitigation for this.
       await page.mouse.click(center.x, center.y, { delay: 50 });
+      // A click can trigger a navigation, but the browser doesn't necessarily start it
+      // synchronously with the click event -- observed: the next perceive()'s
+      // waitForLoadState('load') sometimes resolved against the page BEFORE navigation,
+      // not after, because navigation genuinely hadn't started yet. This gives it a
+      // moment to actually begin.
+      await page.waitForTimeout(150);
       return { ok: true, resolvedTier: tier };
     }
 

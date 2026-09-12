@@ -1,0 +1,248 @@
+{
+  "artifactSchemaVersion": 1,
+  "capability": {
+    "id": "member-savings-balance",
+    "name": "Member Savings Balance",
+    "semver": "1.0.0",
+    "description": "Looks up a member by ID and reads their current savings balance."
+  },
+  "surface": {
+    "kind": "web",
+    "app": "member-services-console",
+    "appVersion": "1.0.0",
+    "variant": "base"
+  },
+  "requires": { "authenticated": false },
+  "approval": { "state": "draft", "verifiedRuns": 0 },
+  "inputs": [
+    { "name": "memberId", "type": "string", "required": true, "redact": false, "description": "The member ID to search for." }
+  ],
+  "outputs": [
+    {
+      "name": "savingsBalance",
+      "type": "currency",
+      "nullable": false,
+      "afterStep": "submit-search",
+      "extraction": {
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.75,
+              "note": "The balance cell has no id or label of its own -- only its row's 'Savings' text, one cell to its left.",
+              "locator": { "strategy": "labelProximity", "labelText": "Savings", "direction": "right", "role": "cell" }
+            }
+          ]
+        },
+        "source": "text",
+        "transform": "currency"
+      },
+      "description": "The member's current savings account balance."
+    }
+  ],
+  "steps": [
+    {
+      "id": "open-login",
+      "intent": "Open the login page",
+      "kind": "action",
+      "action": { "kind": "navigate", "url": "http://localhost:4400/login" },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            { "tier": 1, "confidence": 0.95, "note": "Real <label for> on this field -- stable across re-styling.", "locator": { "strategy": "roleAndName", "role": "textbox", "name": "Username" } }
+          ]
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "enter-username",
+      "intent": "Enter the operator username",
+      "kind": "action",
+      "action": {
+        "kind": "type",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            { "tier": 1, "confidence": 0.95, "note": "Real <label for> on this field -- stable across re-styling.", "locator": { "strategy": "roleAndName", "role": "textbox", "name": "Username" } }
+          ]
+        },
+        "text": "svc.operator"
+      },
+      "checkpoint": {
+        "kind": "nodeValue",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            { "tier": 1, "confidence": 0.95, "note": "Real <label for> on this field -- stable across re-styling.", "locator": { "strategy": "roleAndName", "role": "textbox", "name": "Username" } }
+          ]
+        },
+        "op": "eq",
+        "value": "svc.operator"
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "enter-password",
+      "intent": "Enter the operator password",
+      "kind": "action",
+      "action": {
+        "kind": "typeCredential",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            { "tier": 2, "confidence": 0.8, "note": "No <label for> at all -- only the adjacent 'Password' table cell to its left.", "locator": { "strategy": "labelProximity", "labelText": "Password", "direction": "right", "role": "textbox" } }
+          ]
+        },
+        "credentialRef": "FIXTURE_OPERATOR_PASSWORD"
+      },
+      "checkpoint": {
+        "kind": "nodeValue",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            { "tier": 2, "confidence": 0.8, "note": "No <label for> at all -- only the adjacent 'Password' table cell to its left.", "locator": { "strategy": "labelProximity", "labelText": "Password", "direction": "right", "role": "textbox" } }
+          ]
+        },
+        "op": "nonEmpty"
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "submit-login",
+      "intent": "Submit the login form",
+      "kind": "action",
+      "action": {
+        "kind": "click",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            { "tier": 1, "confidence": 0.95, "note": "A real <button>, not a styled table cell -- one of the few well-behaved controls on this screen.", "locator": { "strategy": "roleAndName", "role": "button", "name": "Log In" } }
+          ]
+        }
+      },
+      "checkpoint": { "kind": "urlMatches", "pattern": "/app$" },
+      "risk": "safe"
+    },
+    {
+      "id": "enter-member-id",
+      "intent": "Enter the member ID to search for",
+      "kind": "action",
+      "action": {
+        "kind": "type",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            { "tier": 2, "confidence": 0.8, "note": "No <label for> at all -- only the adjacent 'Member ID' table cell to its left.", "locator": { "strategy": "labelProximity", "labelText": "Member ID", "direction": "right", "role": "textbox" } }
+          ]
+        },
+        "text": "{{memberId}}"
+      },
+      "checkpoint": {
+        "kind": "nodeValue",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            { "tier": 2, "confidence": 0.8, "note": "No <label for> at all -- only the adjacent 'Member ID' table cell to its left.", "locator": { "strategy": "labelProximity", "labelText": "Member ID", "direction": "right", "role": "textbox" } }
+          ]
+        },
+        "op": "nonEmpty"
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "submit-search",
+      "intent": "Submit the member search",
+      "kind": "action",
+      "action": {
+        "kind": "click",
+        "target": {
+          "recordedTier": 3,
+          "candidates": [
+            { "tier": 3, "confidence": 0.6, "note": "A <td onclick>, not a real button -- its Chrome accessibility role is a table cell, not 'button', so only visible text finds it. Scoped to the content frame: the nav frame's 'Search Members' link also contains the substring 'Search'.", "locator": { "strategy": "visibleText", "text": "Search", "framePath": ["content"] } }
+          ]
+        }
+      },
+      "checkpoint": {
+        "kind": "any",
+        "of": [
+          {
+            "kind": "nodeExists",
+            "target": {
+              "recordedTier": 2,
+              "candidates": [
+                { "tier": 2, "confidence": 0.75, "note": "The balance cell has no id or label of its own -- only its row's 'Savings' text, one cell to its left.", "locator": { "strategy": "labelProximity", "labelText": "Savings", "direction": "right", "role": "cell" } }
+              ]
+            }
+          },
+          { "kind": "textPresent", "scope": "page", "pattern": "No member found" }
+        ]
+      },
+      "risk": "safe"
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "member_not_found",
+      "detect": { "kind": "textPresent", "scope": "page", "pattern": "No member found" },
+      "message": "No member was found for the given ID."
+    }
+  ],
+  "recovery": [
+    {
+      "code": "dismiss_dialog",
+      "detect": {
+        "kind": "nodeExists",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            { "tier": 1, "confidence": 0.9, "note": "A real <button> on the one-time system-notice interstitial.", "locator": { "strategy": "roleAndName", "role": "button", "name": "OK" } }
+          ]
+        }
+      },
+      "strategy": {
+        "kind": "runSteps",
+        "steps": [
+          {
+            "id": "dismiss-dialog-click",
+            "intent": "Dismiss the system notice",
+            "kind": "action",
+            "action": {
+              "kind": "click",
+              "target": {
+                "recordedTier": 1,
+                "candidates": [
+                  { "tier": 1, "confidence": 0.9, "note": "A real <button> on the one-time system-notice interstitial.", "locator": { "strategy": "roleAndName", "role": "button", "name": "OK" } }
+                ]
+              }
+            },
+            "checkpoint": {
+              "kind": "nodeAbsent",
+              "target": {
+                "recordedTier": 1,
+                "candidates": [
+                  { "tier": 1, "confidence": 0.9, "note": "A real <button> on the one-time system-notice interstitial.", "locator": { "strategy": "roleAndName", "role": "button", "name": "OK" } }
+                ]
+              }
+            },
+            "risk": "safe"
+          }
+        ]
+      },
+      "maxAttempts": 1
+    }
+  ],
+  "policy": {
+    "allowedOrigins": ["http://localhost:4400"],
+    "allowedActions": ["navigate", "click", "type", "typeCredential"]
+  },
+  "provenance": {
+    "discoveredAt": "2026-09-12T00:00:00.000Z",
+    "model": "hand-authored",
+    "runId": "hand-authored-v1",
+    "humanAssisted": true
+  }
+}

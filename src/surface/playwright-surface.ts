@@ -17,10 +17,10 @@ export interface PlaywrightSurfaceOptions {
   headless?: boolean;
   evidenceDir?: string;
   /**
-   * Temporary: credentialRef is read as an env var name directly. Phase 4's
-   * CredentialProvider formalizes injection at session start; this keeps the seam (a
-   * reference resolved inside the surface, never a literal in an action or artifact)
-   * real today without blocking on work that hasn't happened yet.
+   * Bridge until a dedicated CredentialProvider formalizes injection at session start:
+   * credentialRef is read as an env var name directly. The seam it stands in for is
+   * real either way -- a reference resolved inside the surface, never a literal value
+   * in an action or artifact.
    */
   resolveCredential?: (ref: string) => string;
 }

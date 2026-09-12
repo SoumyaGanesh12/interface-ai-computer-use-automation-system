@@ -51,6 +51,20 @@ GET /_control/tenant/:variant a | b   -- b relabels "Member ID" to "Account Numb
 GET /_control/reset
 ```
 
+## Try a real replay
+
+`tests/replay/executor.test.ts` runs the actual committed artifact --
+`artifacts/member-savings-balance@1.0.0.json` -- against a real browser driving the real
+fixture, with no model anywhere in the loop:
+
+```bash
+npx vitest run tests/replay/executor.test.ts
+```
+
+It replays the same capability twice: once for a real member (extracts the real
+balance), once for an unknown one -- which comes back as a clean `business_outcome`,
+not a crash. Conflating the two is an easy way to get this kind of system wrong.
+
 ## Layout
 
 - `src/surface/observation.ts` -- the normalized perception format that discovery and
