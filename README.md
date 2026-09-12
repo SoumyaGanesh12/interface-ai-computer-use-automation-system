@@ -29,6 +29,11 @@ anything above it -- and the test suite.
   replay both consume.
 - `src/surface/hash.ts` -- the observation fingerprint used for no-progress detection
   during discovery.
+- `src/surface/action.ts` -- the one action union shared by discovery and replay.
+- `src/surface/surface.ts` -- the `Surface` interface: the seam between perceiving/acting
+  on a UI and everything above it.
+- `src/locator/descriptor.ts` -- the five-tier locator ladder, with the tier a candidate
+  claims validated against the strategy it actually uses.
 - `.dependency-cruiser.cjs` -- the boundary rules, wired before any code they govern.
 
 The artifact schema and deterministic replay are built and proven out before the
