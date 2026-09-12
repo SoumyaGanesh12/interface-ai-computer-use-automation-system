@@ -20,7 +20,10 @@ export interface ReplayResult {
       | 'output_extraction'
       | 'policy_denied'
       | 'recovery_exhausted'
+      /** Nobody answered within the configured window -- one intervention, unanswered. */
       | 'escalation_timeout'
+      /** Distinct from escalation_timeout: this run has hit its per-run escalation cap. Answered every time, still structurally unable to finish unattended. */
+      | 'escalation_limit'
       | 'idempotency_ambiguous'
       | 'budget_exceeded'
       | 'hard';

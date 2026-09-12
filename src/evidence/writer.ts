@@ -20,7 +20,14 @@ import path from 'node:path';
 import { redactInputs, type InputDeclaration } from '../policy/redact';
 import { runEvidenceDir } from './paths';
 
-export type RunEventKind = 'run_started' | 'step_succeeded' | 'step_failed' | 'recovery_attempted' | 'run_finished';
+export type RunEventKind =
+  | 'run_started'
+  | 'step_succeeded'
+  | 'step_failed'
+  | 'recovery_attempted'
+  | 'escalation_raised'
+  | 'escalation_resolved'
+  | 'run_finished';
 
 export interface RunEventInput {
   kind: RunEventKind;

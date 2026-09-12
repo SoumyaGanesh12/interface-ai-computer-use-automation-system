@@ -17,6 +17,8 @@ import type { Artifact } from '../../src/catalog/artifact';
 import { replay } from '../../src/replay/executor';
 import { createPlaywrightWebSurface } from '../../src/surface/playwright-surface';
 import { generateRunId } from '../../src/evidence/run-id';
+import { RunLease } from '../../src/session/lease';
+import { ConsoleOperatorChannel } from '../../src/session/operator-channel';
 import type { Surface } from '../../src/surface/surface';
 
 const ARTIFACT_PATH = 'artifacts/member-savings-balance@1.0.0.json';
@@ -70,7 +72,12 @@ describe('replay: member-savings-balance', () => {
     if (!validated.ok) throw new Error(validated.reason);
     const artifact = retarget(validated.artifact, baseUrl);
 
-    const result = await replay(artifact, { memberId: '41382' }, { surface, runId: generateRunId(artifact.capability.id) });
+    const result = await replay(artifact, { memberId: '41382' }, {
+      surface,
+      runId: generateRunId(artifact.capability.id),
+      lease: new RunLease(),
+      operatorChannel: new ConsoleOperatorChannel(),
+    });
 
     expect(result.status).toBe('success');
     expect(result.outputs?.savingsBalance).toBe(1204.5);
@@ -83,7 +90,12 @@ describe('replay: member-savings-balance', () => {
     if (!validated.ok) throw new Error(validated.reason);
     const artifact = retarget(validated.artifact, baseUrl);
 
-    const result = await replay(artifact, { memberId: '00000' }, { surface, runId: generateRunId(artifact.capability.id) });
+    const result = await replay(artifact, { memberId: '00000' }, {
+      surface,
+      runId: generateRunId(artifact.capability.id),
+      lease: new RunLease(),
+      operatorChannel: new ConsoleOperatorChannel(),
+    });
 
     expect(result.status).toBe('business_outcome');
     expect(result.outcome?.code).toBe('member_not_found');

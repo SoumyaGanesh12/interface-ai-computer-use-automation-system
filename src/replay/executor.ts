@@ -24,18 +24,27 @@ import type { Artifact } from '../catalog/artifact';
 import type { Step } from '../catalog/step';
 import { interpolateAction } from '../catalog/interpolate';
 import { evaluate } from '../matcher/evaluate';
+import type { Matcher } from '../matcher/types';
 import { extract } from '../matcher/extraction';
 import { createEvidenceWriter } from '../evidence/writer';
+import type { RunLease, InterventionRequest } from '../session/lease';
+import type { OperatorChannel } from '../session/operator-channel';
 import type { Surface } from '../surface/surface';
 import type { Observation } from '../surface/observation';
 import type { Tier } from '../locator/descriptor';
 import type { ReplayResult } from './result';
 
 const ATTEMPT_BUDGET = 3;
+const MAX_ESCALATIONS_PER_RUN = 3;
+const DEFAULT_ESCALATION_TIMEOUT_MS = 15 * 60 * 1000;
 
 export interface ReplayDeps {
   surface: Surface;
   runId: string;
+  lease: RunLease;
+  operatorChannel: OperatorChannel;
+  /** Default 15 minutes. A batch capability and a live call want different answers here. */
+  escalationTimeoutMs?: number;
 }
 
 /** Every step in a recovery sub-flow is risk: 'safe' (schema-enforced), so this never touches the dispatched-flag branch. */
@@ -59,6 +68,8 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
   const locatorTiers: ReplayResult['locatorTiers'] = [];
   const recoveries: ReplayResult['recoveries'] = [];
   const drift: ReplayResult['drift'] = [];
+  const humanInterventions: ReplayResult['humanInterventions'] = [];
+  let escalationCount = 0;
 
   writer.write({ kind: 'run_started', detail: artifact.capability.id, inputs, inputDeclarations: artifact.inputs });
 
@@ -74,7 +85,7 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
       locatorTiers,
       recoveries,
       drift,
-      humanInterventions: [],
+      humanInterventions,
     };
   }
 
@@ -103,6 +114,56 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
     return finish({ status: 'failure', ...base(), failure: { kind, stepId, intent, expected, observed, evidenceRef: await evidenceRef() } });
   }
 
+  /**
+   * Raises an intervention and blocks on the lease. `verify`, when given, is re-checked
+   * against a fresh observation once a human signals resume -- never assume they left the
+   * session where expected; a still-failing verify re-escalates rather than proceeding.
+   * Without `verify` (the recovery_exhausted case), the human is unblocking a
+   * precondition, not completing the step itself, so the caller re-runs the ordinary
+   * step loop from the top instead.
+   */
+  async function escalate(step: Step, reason: string, verify?: Matcher): Promise<ReplayResult | 'resumed'> {
+    if (escalationCount >= MAX_ESCALATIONS_PER_RUN) {
+      return failure('escalation_limit', step.id, step.intent, `at most ${MAX_ESCALATIONS_PER_RUN} escalations per run`, `escalation requested a ${escalationCount + 1}th time: ${reason}`);
+    }
+    escalationCount++;
+
+    const request: InterventionRequest = {
+      runId: deps.runId,
+      capability: artifact.capability.id,
+      stepId: step.id,
+      intent: step.intent,
+      reason,
+      raisedAt: new Date().toISOString(),
+    };
+    const raisedAt = Date.now();
+    writer.write({ kind: 'escalation_raised', stepId: step.id, detail: reason });
+    await deps.surface.beginHumanActionRecording().catch(() => {});
+    await deps.operatorChannel.notify(request);
+
+    const outcome = await deps.lease.requestHandoff(request, deps.escalationTimeoutMs ?? DEFAULT_ESCALATION_TIMEOUT_MS);
+    const humanActions = await deps.surface.endHumanActionRecording().catch(() => []);
+    const durationMs = Date.now() - raisedAt;
+    humanInterventions.push({ stepId: step.id, reason, durationMs });
+    writer.write({ kind: 'escalation_resolved', stepId: step.id, detail: `${outcome}, ${humanActions.length} human action(s) recorded` });
+
+    if (outcome === 'timeout') {
+      return failure('escalation_timeout', step.id, step.intent, 'a human to take over within the configured window', 'no response before the escalation window elapsed');
+    }
+
+    if (!verify) {
+      deps.lease.confirmResumed();
+      return 'resumed';
+    }
+    const observation = await deps.surface.observe();
+    const check = evaluate(verify, observation);
+    deps.lease.confirmResumed();
+    if (!check.satisfied) {
+      return escalate(step, `resumed, but the expected condition still doesn't hold: ${check.evidence}`, verify);
+    }
+    return 'resumed';
+  }
+
   for (const input of artifact.inputs) {
     if (input.required && !(input.name in inputs)) {
       return failure('hard', 'validate-inputs', 'validate inputs', `input "${input.name}" is provided`, 'missing');
@@ -125,12 +186,19 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
       lastObservation = observation;
 
       // Recovery before outcomes, declaration order, at every re-entry.
-      let recovered = false;
+      let retryFromTop = false;
       for (const r of artifact.recovery) {
         if (!evaluate(r.detect, observation).satisfied) continue;
         const used = recoveryAttempts.get(r.code) ?? 0;
         if (used >= r.maxAttempts) {
-          return failure('recovery_exhausted', step.id, step.intent, `recovery "${r.code}" within ${r.maxAttempts} attempt(s)`, 'detector still matches after exhausting attempts');
+          // A human unblocking whatever recovery couldn't handle, not completing this
+          // step itself -- no `verify`, so the outer loop re-runs the ordinary step
+          // logic from the top on resume, rather than re-checking this step's own
+          // checkpoint here.
+          const outcome = await escalate(step, `recovery "${r.code}" exhausted after ${r.maxAttempts} attempt(s): detector still matches`);
+          if (outcome !== 'resumed') return outcome;
+          retryFromTop = true;
+          break;
         }
         recoveryAttempts.set(r.code, used + 1);
 
@@ -141,10 +209,10 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
         recoveries.push({ code: r.code, attempts: used + 1 });
         writer.write({ kind: 'recovery_attempted', stepId: step.id, detail: `${r.code}: ${outcome.ok ? 'succeeded' : outcome.detail}` });
         if (!outcome.ok) return failure('hard', step.id, step.intent, 'recovery sub-flow to succeed', outcome.detail);
-        recovered = true;
+        retryFromTop = true;
         break;
       }
-      if (recovered) continue; // re-observe and re-check from the top
+      if (retryFromTop) continue; // re-observe and re-check from the top
 
       // Outcomes, declaration order.
       for (const o of artifact.outcomes) {
@@ -154,7 +222,12 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
       }
 
       if (step.kind === 'escalate') {
-        return failure('hard', step.id, step.intent, 'a human to perform this step', step.escalateReason ?? 'escalate step');
+        // A human-performed segment recorded during discovery: verify against this
+        // step's own checkpoint on resume, since the whole point is confirming the
+        // human actually completed it.
+        const outcome = await escalate(step, step.escalateReason ?? 'escalate step', step.checkpoint);
+        if (outcome !== 'resumed') return outcome;
+        break; // the human completed this step; move to the next one.
       }
       const rawAction = step.action!;
 
@@ -165,14 +238,18 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
 
       // Irreversible + already dispatched this run: never redispatch. Consult idempotency instead.
       if (step.risk === 'irreversible' && dispatched.has(step.id)) {
-        if (!step.idempotency) {
-          return failure('idempotency_ambiguous', step.id, step.intent, 'confirmation the action already completed', 'already dispatched once this run; no idempotency probe declared');
-        }
-        const probe = evaluate(step.idempotency.probe, observation);
-        if (!probe.satisfied) {
-          return failure('idempotency_ambiguous', step.id, step.intent, 'idempotency probe to confirm completion', `probe did not confirm completion: ${probe.evidence}`);
-        }
-        break; // probe confirms it already happened -- treat this step as satisfied, move on.
+        const probe = step.idempotency ? evaluate(step.idempotency.probe, observation) : undefined;
+        if (probe?.satisfied) break; // probe confirms it already happened -- treat this step as satisfied, move on.
+
+        // A human resolving this in 90 seconds is a correct outcome; a blind retry
+        // that redispatches an irreversible action is not. Verify against this step's
+        // own checkpoint on resume -- the human is confirming this step's own result.
+        const detail = step.idempotency
+          ? `idempotency probe did not confirm completion: ${probe!.evidence}`
+          : 'already dispatched once this run; no idempotency probe declared';
+        const outcome = await escalate(step, detail, step.checkpoint);
+        if (outcome !== 'resumed') return outcome;
+        break; // the human confirmed this step's outcome; move to the next one.
       }
 
       if (step.risk === 'irreversible') dispatched.add(step.id);

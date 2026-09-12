@@ -1,0 +1,12 @@
+{"runId":"member-savings-balance-1789244336257","seq":0,"timestamp":"2026-09-12T20:18:56.340Z","stepId":"open-login","status":"dispatched"}
+{"runId":"member-savings-balance-1789244336257","seq":1,"timestamp":"2026-09-12T20:18:56.435Z","stepId":"open-login","status":"confirmed"}
+{"runId":"member-savings-balance-1789244336257","seq":2,"timestamp":"2026-09-12T20:18:56.491Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"member-savings-balance-1789244336257","seq":3,"timestamp":"2026-09-12T20:18:56.677Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"member-savings-balance-1789244336257","seq":4,"timestamp":"2026-09-12T20:18:56.716Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"member-savings-balance-1789244336257","seq":5,"timestamp":"2026-09-12T20:18:56.986Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"member-savings-balance-1789244336257","seq":6,"timestamp":"2026-09-12T20:18:57.023Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"member-savings-balance-1789244336257","seq":7,"timestamp":"2026-09-12T20:18:57.330Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"member-savings-balance-1789244336257","seq":8,"timestamp":"2026-09-12T20:18:57.364Z","stepId":"enter-member-id","status":"dispatched"}
+{"runId":"member-savings-balance-1789244336257","seq":9,"timestamp":"2026-09-12T20:18:57.507Z","stepId":"enter-member-id","status":"confirmed"}
+{"runId":"member-savings-balance-1789244336257","seq":10,"timestamp":"2026-09-12T20:18:57.540Z","stepId":"submit-search","status":"dispatched"}
+{"runId":"member-savings-balance-1789244336257","seq":11,"timestamp":"2026-09-12T20:18:57.833Z","stepId":"submit-search","status":"confirmed"}

@@ -116,7 +116,11 @@ not a crash. Conflating the two is an easy way to get this kind of system wrong.
   mouse/keyboard events -- no DOM handle needed for click/type, which is also what a
   desktop adapter would have to assume.
 - `src/surface/playwright-surface.ts` -- the one `Surface` implementation, wiring the
-  above together. Headed by default (human takeover needs an operable window later).
+  above together. Headed by default: human takeover needs an operable window, not a
+  screenshot of one.
+- `src/surface/human-recorder.ts` -- attaches a click/input listener across every frame
+  while a human has the session; records tag + a structural identifier only, never a
+  typed value.
 - `src/catalog/` -- the capability contract: `step.ts` (one step, shared by the main
   flow and a recovery sub-flow), `recovery.ts` (`runSteps` | `preflight`, every
   `runSteps` step forced `risk: 'safe'`), `artifact.ts` (the full schema), `validate.ts`
@@ -128,15 +132,27 @@ not a crash. Conflating the two is an easy way to get this kind of system wrong.
   checked before outcomes at every re-entry; an irreversible step tracks whether it's
   already dispatched this run so a checkpoint failure never redispatches it; outcomes
   are checked once more after the last step, not just between steps, since a result
-  like "not found" often only becomes visible after the final action.
+  like "not found" often only becomes visible after the final action. A stuck recovery,
+  an ambiguous irreversible dispatch, or a recorded human-performed step all escalate
+  to a lease rather than failing outright -- capped at 3 escalations per run, with a
+  distinct failure kind from a single unanswered timeout.
+- `src/session/lease.ts` -- who controls the live session: `AUTOMATION ->
+  PAUSED_PENDING_HUMAN -> HUMAN_CONTROL -> RESUMING -> AUTOMATION` (or `-> ABORTED` on
+  timeout). A real, tested state machine; a separate operator process sharing it across
+  machines would need IPC, which is the documented mock here -- the transitions and the
+  executor's blocking behavior around them are what's real.
+- `src/session/operator-channel.ts` -- how an intervention reaches a human; one
+  implementation (stdout) behind an interface a web console could implement identically.
 - `src/policy/` -- `allowlist.ts` (checked inside `Surface.act` itself -- the single
   choke point, so any caller driving the surface gets the same guardrail),
   `credentials.ts` (`CredentialProvider`; a reference resolves to a secret only inside
   the surface, never elsewhere), `redact.ts` (the write boundary: an artifact's
   declared-sensitive inputs never reach a log verbatim).
-- `src/evidence/writer.ts` -- one event stream, two sinks: `/evidence/<runId>/` (this
-  run) and `/audit/` (every run, append-only). Every exit path in the executor goes
-  through one `finish()` call, so a run can't complete without being logged.
+- `src/evidence/` -- `writer.ts` (one event stream, two sinks: `/evidence/<runId>/` and
+  `/audit/`, plus a separate `journal.jsonl` of dispatched/confirmed transitions, and a
+  refusal to reopen a runId that already has a finished run on disk), `run-id.ts`
+  (`<capability>-<timestamp>`, not a literal string), `paths.ts` (the one place a run's
+  evidence directory gets computed, so nothing else can compute a different one).
 - `artifacts/member-savings-balance@1.0.0.json` -- a hand-written capability matching
   the task "look up a member and read their savings balance," proven against the real
   fixture end to end (`tests/replay/executor.test.ts`).

@@ -9,6 +9,7 @@
 import type { Action, ActionResult } from './action';
 import type { Observation } from './observation';
 import type { Allowlist } from '../policy/allowlist';
+import type { HumanAction } from './human-action';
 
 /** A pointer to what capture() produced. */
 export interface EvidenceRef {
@@ -27,5 +28,8 @@ export interface Surface {
   /** Which run this Surface is currently acting for -- tags observe()'s output and where capture() saves evidence. Lets one Surface instance run several artifacts in sequence without its evidence landing under the wrong run's folder. */
   setRunId(runId: string): void;
   capture(): Promise<EvidenceRef>;
+  /** Starts recording clicks/inputs across every frame while a human has the session -- never the typed value, only what was touched. */
+  beginHumanActionRecording(): Promise<void>;
+  endHumanActionRecording(): Promise<HumanAction[]>;
   close(): Promise<void>;
 }

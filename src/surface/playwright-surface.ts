@@ -11,8 +11,10 @@ import { performAction } from './act';
 import { EnvCredentialProvider, type CredentialProvider } from '../policy/credentials';
 import type { Allowlist } from '../policy/allowlist';
 import { runEvidenceDir } from '../evidence/paths';
+import { createHumanActionRecorder } from './human-recorder';
 import type { Action, ActionResult } from './action';
 import type { Observation } from './observation';
+import type { HumanAction } from './human-action';
 import type { EvidenceRef, Surface } from './surface';
 
 export interface PlaywrightSurfaceOptions {
@@ -37,6 +39,7 @@ export async function createPlaywrightWebSurface(opts: PlaywrightSurfaceOptions)
   let policy = opts.policy;
   let runId = opts.runId;
   const credentials = opts.credentials ?? new EnvCredentialProvider();
+  const humanRecorder = createHumanActionRecorder(page);
 
   return {
     async observe(): Promise<Observation> {
@@ -67,6 +70,14 @@ export async function createPlaywrightWebSurface(opts: PlaywrightSurfaceOptions)
       await page.screenshot({ path: screenshotPath });
       await writeFile(domSnapshotPath, await page.content(), 'utf-8');
       return { runId, screenshotPath, domSnapshotPath, capturedAt: new Date().toISOString() };
+    },
+
+    async beginHumanActionRecording(): Promise<void> {
+      await humanRecorder.begin();
+    },
+
+    async endHumanActionRecording(): Promise<HumanAction[]> {
+      return humanRecorder.end();
     },
 
     async close(): Promise<void> {
