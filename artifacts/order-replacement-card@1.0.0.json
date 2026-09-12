@@ -1,0 +1,178 @@
+{
+  "artifactSchemaVersion": 1,
+  "capability": {
+    "id": "order-replacement-card",
+    "name": "Order Replacement Card",
+    "semver": "1.0.0",
+    "description": "Logs in, finds a member, and orders a replacement card for them. The one irreversible action in this system -- exercises at-most-once dispatch, the idempotency probe, and escalation on ambiguity."
+  },
+  "surface": {
+    "kind": "web",
+    "app": "member-services-console",
+    "appVersion": "1.0.0",
+    "variant": "base"
+  },
+  "requires": { "authenticated": false },
+  "approval": { "state": "draft", "verifiedRuns": 0 },
+  "inputs": [
+    { "name": "memberId", "type": "string", "required": true, "redact": false, "description": "The member ID to order a replacement card for." }
+  ],
+  "outputs": [
+    {
+      "name": "confirmationReference",
+      "type": "string",
+      "nullable": false,
+      "afterStep": "confirm-order",
+      "extraction": {
+        "target": {
+          "recordedTier": 3,
+          "candidates": [
+            { "tier": 3, "confidence": 0.7, "note": "The reference number has no label or role of its own -- only its literal 'REF-' prefix, which is stable even though the number itself is generated per order.", "locator": { "strategy": "visibleText", "text": "REF-" } }
+          ]
+        },
+        "source": "text",
+        "transform": "regexCapture",
+        "pattern": "REF-\\d+"
+      },
+      "description": "The durable confirmation reference returned once the card order is placed."
+    }
+  ],
+  "steps": [
+    {
+      "id": "open-login",
+      "intent": "Open the login page",
+      "kind": "action",
+      "action": { "kind": "navigate", "url": "http://localhost:4400/login" },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": { "recordedTier": 1, "candidates": [{ "tier": 1, "confidence": 0.95, "note": "Real <label for> on this field.", "locator": { "strategy": "roleAndName", "role": "textbox", "name": "Username" } }] }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "enter-username",
+      "intent": "Enter the operator username",
+      "kind": "action",
+      "action": {
+        "kind": "type",
+        "target": { "recordedTier": 1, "candidates": [{ "tier": 1, "confidence": 0.95, "note": "Real <label for> on this field.", "locator": { "strategy": "roleAndName", "role": "textbox", "name": "Username" } }] },
+        "text": "svc.operator"
+      },
+      "checkpoint": {
+        "kind": "nodeValue",
+        "target": { "recordedTier": 1, "candidates": [{ "tier": 1, "confidence": 0.95, "note": "Real <label for> on this field.", "locator": { "strategy": "roleAndName", "role": "textbox", "name": "Username" } }] },
+        "op": "eq",
+        "value": "svc.operator"
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "enter-password",
+      "intent": "Enter the operator password",
+      "kind": "action",
+      "action": {
+        "kind": "typeCredential",
+        "target": { "recordedTier": 2, "candidates": [{ "tier": 2, "confidence": 0.8, "note": "No label -- only the adjacent 'Password' cell.", "locator": { "strategy": "labelProximity", "labelText": "Password", "direction": "right", "role": "textbox" } }] },
+        "credentialRef": "FIXTURE_OPERATOR_PASSWORD"
+      },
+      "checkpoint": {
+        "kind": "nodeValue",
+        "target": { "recordedTier": 2, "candidates": [{ "tier": 2, "confidence": 0.8, "note": "No label -- only the adjacent 'Password' cell.", "locator": { "strategy": "labelProximity", "labelText": "Password", "direction": "right", "role": "textbox" } }] },
+        "op": "nonEmpty"
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "submit-login",
+      "intent": "Submit the login form",
+      "kind": "action",
+      "action": {
+        "kind": "click",
+        "target": { "recordedTier": 1, "candidates": [{ "tier": 1, "confidence": 0.95, "note": "A real <button>.", "locator": { "strategy": "roleAndName", "role": "button", "name": "Log In" } }] }
+      },
+      "checkpoint": { "kind": "urlMatches", "pattern": "/app$" },
+      "risk": "safe"
+    },
+    {
+      "id": "enter-member-id",
+      "intent": "Enter the member ID to search for",
+      "kind": "action",
+      "action": {
+        "kind": "type",
+        "target": { "recordedTier": 2, "candidates": [{ "tier": 2, "confidence": 0.8, "note": "No label -- only the adjacent 'Member ID' cell.", "locator": { "strategy": "labelProximity", "labelText": "Member ID", "direction": "right", "role": "textbox" } }] },
+        "text": "{{memberId}}"
+      },
+      "checkpoint": {
+        "kind": "nodeValue",
+        "target": { "recordedTier": 2, "candidates": [{ "tier": 2, "confidence": 0.8, "note": "No label -- only the adjacent 'Member ID' cell.", "locator": { "strategy": "labelProximity", "labelText": "Member ID", "direction": "right", "role": "textbox" } }] },
+        "op": "nonEmpty"
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "submit-search",
+      "intent": "Submit the member search",
+      "kind": "action",
+      "action": {
+        "kind": "click",
+        "target": { "recordedTier": 3, "candidates": [{ "tier": 3, "confidence": 0.6, "note": "A <td onclick>, not a real button -- its Chrome role is a table cell, so only visible text finds it. Scoped to the content frame: the nav frame's 'Search Members' link also contains 'Search'.", "locator": { "strategy": "visibleText", "text": "Search", "framePath": ["content"] } }] }
+      },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": { "recordedTier": 3, "candidates": [{ "tier": 3, "confidence": 0.6, "note": "The action link, once the member is found.", "locator": { "strategy": "visibleText", "text": "Order Replacement Card" } }] }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "open-card-order",
+      "intent": "Open the replacement card order screen",
+      "kind": "action",
+      "action": {
+        "kind": "click",
+        "target": { "recordedTier": 3, "candidates": [{ "tier": 3, "confidence": 0.6, "note": "Another onclick span, not a real link or button.", "locator": { "strategy": "visibleText", "text": "Order Replacement Card" } }] }
+      },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": { "recordedTier": 1, "candidates": [{ "tier": 1, "confidence": 0.9, "note": "A real <button> on the confirmation screen.", "locator": { "strategy": "roleAndName", "role": "button", "name": "Confirm Order" } }] }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "confirm-order",
+      "intent": "Confirm the replacement card order",
+      "kind": "action",
+      "action": {
+        "kind": "click",
+        "target": { "recordedTier": 1, "candidates": [{ "tier": 1, "confidence": 0.9, "note": "A real <button>. This is the one irreversible step in this system.", "locator": { "strategy": "roleAndName", "role": "button", "name": "Confirm Order" } }] }
+      },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": { "recordedTier": 3, "candidates": [{ "tier": 3, "confidence": 0.7, "note": "The reference number appears only once the order actually goes through.", "locator": { "strategy": "visibleText", "text": "REF-" } }] }
+      },
+      "risk": "irreversible",
+      "idempotency": {
+        "probe": { "kind": "textPresent", "scope": "page", "pattern": "already ordered" },
+        "key": "{{memberId}}",
+        "navigateTo": "http://localhost:4400/member?id={{memberId}}"
+      }
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "member_not_found",
+      "detect": { "kind": "textPresent", "scope": "page", "pattern": "No member found" },
+      "message": "No member was found for the given ID."
+    }
+  ],
+  "recovery": [],
+  "policy": {
+    "allowedOrigins": ["http://localhost:4400"],
+    "allowedActions": ["navigate", "click", "type", "typeCredential"]
+  },
+  "provenance": {
+    "discoveredAt": "2026-09-12T00:00:00.000Z",
+    "model": "hand-authored",
+    "runId": "hand-authored-v1",
+    "humanAssisted": true
+  }
+}

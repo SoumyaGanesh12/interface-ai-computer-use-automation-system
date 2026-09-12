@@ -1,0 +1,15 @@
+{"runId":"order-replacement-card-1789246225658","seq":0,"timestamp":"2026-09-12T20:50:25.681Z","stepId":"open-login","status":"dispatched"}
+{"runId":"order-replacement-card-1789246225658","seq":1,"timestamp":"2026-09-12T20:50:25.730Z","stepId":"open-login","status":"confirmed"}
+{"runId":"order-replacement-card-1789246225658","seq":2,"timestamp":"2026-09-12T20:50:25.758Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"order-replacement-card-1789246225658","seq":3,"timestamp":"2026-09-12T20:50:25.926Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"order-replacement-card-1789246225658","seq":4,"timestamp":"2026-09-12T20:50:25.955Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"order-replacement-card-1789246225658","seq":5,"timestamp":"2026-09-12T20:50:26.153Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"order-replacement-card-1789246225658","seq":6,"timestamp":"2026-09-12T20:50:26.181Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"order-replacement-card-1789246225658","seq":7,"timestamp":"2026-09-12T20:50:26.507Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"order-replacement-card-1789246225658","seq":8,"timestamp":"2026-09-12T20:50:26.539Z","stepId":"enter-member-id","status":"dispatched"}
+{"runId":"order-replacement-card-1789246225658","seq":9,"timestamp":"2026-09-12T20:50:26.683Z","stepId":"enter-member-id","status":"confirmed"}
+{"runId":"order-replacement-card-1789246225658","seq":10,"timestamp":"2026-09-12T20:50:26.714Z","stepId":"submit-search","status":"dispatched"}
+{"runId":"order-replacement-card-1789246225658","seq":11,"timestamp":"2026-09-12T20:50:27.051Z","stepId":"submit-search","status":"confirmed"}
+{"runId":"order-replacement-card-1789246225658","seq":12,"timestamp":"2026-09-12T20:50:27.083Z","stepId":"open-card-order","status":"dispatched"}
+{"runId":"order-replacement-card-1789246225658","seq":13,"timestamp":"2026-09-12T20:50:27.371Z","stepId":"open-card-order","status":"confirmed"}
+{"runId":"order-replacement-card-1789246225658","seq":14,"timestamp":"2026-09-12T20:50:27.405Z","stepId":"confirm-order","status":"dispatched"}

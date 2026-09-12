@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head>
+<title>Login</title>
+<style>
+  body { font-family: Tahoma, Geneva, sans-serif; font-size: 13px; margin: 0; }
+  table { border-collapse: collapse; }
+  .banner { background: #1f4e79; color: white; padding: 6px 10px; font-weight: bold; }
+  .content { padding: 12px; }
+  .fld td { padding: 3px 6px; }
+  .actionCell { background: #ddd; border: 1px outset #999; padding: 4px 14px; cursor: pointer; display: inline-block; }
+  .acct td { border: 1px solid #999; padding: 4px 10px; }
+  .notice { background: #fff3cd; border: 1px solid #ffcc00; padding: 10px; margin-bottom: 10px; }
+  .error { background: #f8d7da; border: 1px solid #cc0000; padding: 10px; }
+</style>
+</head>
+<body>
+<div class="banner">MEMBER SERVICES CONSOLE - Riverbend Credit Union</div>
+<div class="content">
+
+
+<form method="post" action="/login">
+  <table class="fld">
+    <tbody><tr><td><label for="uname">Username</label></td><td><input type="text" id="uname" name="f_a1" style=""></td></tr>
+    <tr><td>Password</td><td><input type="password" name="f_a2" style=""></td></tr>
+    <tr><td colspan="2"><button type="submit">Log In</button></td></tr>
+  </tbody></table>
+</form>
+
+</div>
+
+</body></html>

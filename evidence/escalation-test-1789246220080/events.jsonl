@@ -1,0 +1,5 @@
+{"runId":"escalation-test-1789246220080","seq":0,"timestamp":"2026-09-12T20:50:20.083Z","kind":"run_started","detail":"escalation-test","inputs":{}}
+{"runId":"escalation-test-1789246220080","seq":1,"timestamp":"2026-09-12T20:50:20.520Z","kind":"step_succeeded","stepId":"go"}
+{"runId":"escalation-test-1789246220080","seq":2,"timestamp":"2026-09-12T20:50:20.618Z","kind":"escalation_raised","stepId":"human-step","detail":"needs a human to verify"}
+{"runId":"escalation-test-1789246220080","seq":3,"timestamp":"2026-09-12T20:50:20.690Z","kind":"escalation_resolved","stepId":"human-step","detail":"resumed, 0 human action(s) recorded"}
+{"runId":"escalation-test-1789246220080","seq":4,"timestamp":"2026-09-12T20:50:20.792Z","kind":"run_finished","detail":"success","result":{"status":"success","capability":"escalation-test","version":"1.0.0","runId":"escalation-test-1789246220080","durationMs":710,"locatorTiers":[],"recoveries":[],"drift":[],"humanInterventions":[{"stepId":"human-step","reason":"needs a human to verify","durationMs":72}],"outputs":{}}}

@@ -5,9 +5,9 @@
  * unconditionally, so a caller can't forget to.
  *
  * A separate, plainer journal() stream lives alongside events.jsonl: one line per
- * step's dispatched/confirmed transition. Buffered for every step today; selective
- * fsync before dispatching an irreversible step is added once that safety work exists
- * -- not faked here.
+ * step's dispatched/confirmed transition. `durable: true` (the executor sets this
+ * before dispatching an irreversible action) opens the file, writes, and fsyncs before
+ * returning; every other write is a plain buffered append.
  *
  * Per-instance state only (a seq counter): never module-level, so concurrent runs never
  * share it. Construction itself refuses to reopen a runId that already has a
@@ -15,7 +15,7 @@
  * appending a second run's events into it is exactly the corruption a reused runId
  * causes.
  */
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, writeSync } from 'node:fs';
 import path from 'node:path';
 import { redactInputs, type InputDeclaration } from '../policy/redact';
 import { runEvidenceDir } from './paths';
@@ -47,7 +47,18 @@ export interface JournalEntry {
 
 export interface EvidenceWriter {
   write(event: RunEventInput): void;
-  journal(entry: JournalEntry): void;
+  /** `durable: true` fsyncs before returning -- required before dispatching an irreversible action, so dispatch state remains determinable from disk after a crash. Buffered otherwise. */
+  journal(entry: JournalEntry, durable?: boolean): void;
+}
+
+function appendDurable(filePath: string, data: string): void {
+  const fd = openSync(filePath, 'a');
+  try {
+    writeSync(fd, data);
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
 }
 
 function alreadyFinished(eventsPath: string): boolean {
@@ -91,9 +102,10 @@ export function createEvidenceWriter(runId: string, evidenceRoot = 'evidence', a
       appendFileSync(auditPath, line, 'utf-8');
     },
 
-    journal(entry) {
+    journal(entry, durable = false) {
       const line = JSON.stringify({ runId, seq: journalSeq++, timestamp: new Date().toISOString(), ...entry }) + '\n';
-      appendFileSync(journalPath, line, 'utf-8');
+      if (durable) appendDurable(journalPath, line);
+      else appendFileSync(journalPath, line, 'utf-8');
     },
   };
 }

@@ -65,6 +65,17 @@ It replays the same capability twice: once for a real member (extracts the real
 balance), once for an unknown one -- which comes back as a clean `business_outcome`,
 not a crash. Conflating the two is an easy way to get this kind of system wrong.
 
+`tests/replay/idempotency.test.ts` does the same against
+`artifacts/order-replacement-card@1.0.0.json` -- the one irreversible action in this
+system -- and proves at-most-once concretely: a forced checkpoint failure right after a
+real dispatch consults the idempotency probe instead of clicking "Confirm Order" again,
+verified against the fixture's own order store, not just the reported result.
+
+`tests/replay/escalation.test.ts` proves the human-takeover mechanism the same way: a
+real `replay()` call pausing mid-flight, a simulated operator resuming it, a timeout
+when nobody responds, and re-escalation up to the per-run cap when a resume turns out
+not to have fixed anything.
+
 ## Layout
 
 - `src/surface/observation.ts` -- the normalized perception format that discovery and
@@ -135,7 +146,12 @@ not a crash. Conflating the two is an easy way to get this kind of system wrong.
   like "not found" often only becomes visible after the final action. A stuck recovery,
   an ambiguous irreversible dispatch, or a recorded human-performed step all escalate
   to a lease rather than failing outright -- capped at 3 escalations per run, with a
-  distinct failure kind from a single unanswered timeout.
+  distinct failure kind from a single unanswered timeout. An irreversible step's
+  idempotency probe navigates to `idempotency.navigateTo` first when declared, so it
+  checks a known route rather than whatever page a failed checkpoint happened to leave
+  the run on, and that dispatch is journaled with `durable: true` -- fsync before the
+  click, not after -- so dispatch state remains determinable from disk if a crash
+  happens in between.
 - `src/session/lease.ts` -- who controls the live session: `AUTOMATION ->
   PAUSED_PENDING_HUMAN -> HUMAN_CONTROL -> RESUMING -> AUTOMATION` (or `-> ABORTED` on
   timeout). A real, tested state machine; a separate operator process sharing it across
@@ -149,13 +165,20 @@ not a crash. Conflating the two is an easy way to get this kind of system wrong.
   the surface, never elsewhere), `redact.ts` (the write boundary: an artifact's
   declared-sensitive inputs never reach a log verbatim).
 - `src/evidence/` -- `writer.ts` (one event stream, two sinks: `/evidence/<runId>/` and
-  `/audit/`, plus a separate `journal.jsonl` of dispatched/confirmed transitions, and a
-  refusal to reopen a runId that already has a finished run on disk), `run-id.ts`
-  (`<capability>-<timestamp>`, not a literal string), `paths.ts` (the one place a run's
-  evidence directory gets computed, so nothing else can compute a different one).
+  `/audit/`, plus a separate `journal.jsonl` of dispatched/confirmed transitions --
+  `durable: true` opens the file, writes, and fsyncs before returning, everything else
+  is a buffered append -- and a refusal to reopen a runId that already has a finished
+  run on disk), `run-id.ts` (`<capability>-<timestamp>`, not a literal string),
+  `paths.ts` (the one place a run's evidence directory gets computed, so nothing else
+  can compute a different one).
 - `artifacts/member-savings-balance@1.0.0.json` -- a hand-written capability matching
   the task "look up a member and read their savings balance," proven against the real
   fixture end to end (`tests/replay/executor.test.ts`).
+- `artifacts/order-replacement-card@1.0.0.json` -- the one irreversible capability:
+  finds a member and orders a replacement card, returning a durable confirmation
+  reference. Its idempotency probe checks the member page for an "already ordered"
+  notice after navigating there directly, rather than assuming whatever page a failed
+  checkpoint left the run on (`tests/replay/idempotency.test.ts`).
 - `.dependency-cruiser.cjs` -- the boundary rules, wired before any code they govern.
 
 The artifact schema and deterministic replay are built and proven out before the

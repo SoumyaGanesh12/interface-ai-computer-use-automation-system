@@ -5,10 +5,14 @@
  *
  * Irreversible steps: at-most-once, not exactly-once. A per-step in-memory `dispatched`
  * flag (this run only) means a checkpoint failure after dispatch never redispatches; it
- * consults the step's idempotency probe instead, and escalates the ambiguity rather than
- * guessing. Every step's dispatch/confirm also lands in the journal, buffered for now --
- * fsync before an irreversible dispatch specifically needs safety work that isn't built
- * yet, so this doesn't claim durability it can't back up.
+ * consults the step's idempotency probe instead (navigating to `idempotency.navigateTo`
+ * first when declared, so the probe checks a known route rather than whatever page a
+ * failed checkpoint happened to leave us on), and escalates the ambiguity rather than
+ * guessing. An irreversible dispatch is journaled with `durable: true` (fsync before
+ * this function returns), so dispatch state remains determinable from disk if the
+ * process crashes between that write and the actual click. Restart-time recovery itself
+ * (scanning the journal for a dispatched-without-confirmed record after a crash) is a
+ * documented cut -- this makes the crash state knowable, not automatically resumable.
  *
  * A business outcome (e.g. "member not found") often only becomes visible after the
  * *last* step, with no following step to trigger the usual pre-step outcome check --
@@ -22,7 +26,7 @@
  */
 import type { Artifact } from '../catalog/artifact';
 import type { Step } from '../catalog/step';
-import { interpolateAction } from '../catalog/interpolate';
+import { interpolate, interpolateAction } from '../catalog/interpolate';
 import { evaluate } from '../matcher/evaluate';
 import type { Matcher } from '../matcher/types';
 import { extract } from '../matcher/extraction';
@@ -238,8 +242,27 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
 
       // Irreversible + already dispatched this run: never redispatch. Consult idempotency instead.
       if (step.risk === 'irreversible' && dispatched.has(step.id)) {
-        const probe = step.idempotency ? evaluate(step.idempotency.probe, observation) : undefined;
-        if (probe?.satisfied) break; // probe confirms it already happened -- treat this step as satisfied, move on.
+        let probeObservation = observation;
+        if (step.idempotency?.navigateTo) {
+          const navTarget = interpolate(step.idempotency.navigateTo, inputs);
+          if (!navTarget.ok) {
+            return failure('hard', step.id, step.intent, 'every {{template}} to resolve', `unresolved template "{{${navTarget.missing}}}" in idempotency.navigateTo`);
+          }
+          const navResult = await deps.surface.act({ kind: 'navigate', url: navTarget.value });
+          if (!navResult.ok) {
+            return failure('idempotency_ambiguous', step.id, step.intent, 'to reach the idempotency probe route', `navigation to idempotency.navigateTo failed: ${navResult.detail}`);
+          }
+          probeObservation = await deps.surface.observe();
+        }
+
+        const probe = step.idempotency ? evaluate(step.idempotency.probe, probeObservation) : undefined;
+        if (probe?.satisfied) {
+          // Confirmed via the probe, not a direct checkpoint pass -- still a real
+          // confirmation, so it's logged the same way a normal success would be.
+          writer.journal({ stepId: step.id, status: 'confirmed' });
+          writer.write({ kind: 'step_succeeded', stepId: step.id, detail: `confirmed via idempotency probe: ${probe.evidence}` });
+          break;
+        }
 
         // A human resolving this in 90 seconds is a correct outcome; a blind retry
         // that redispatches an irreversible action is not. Verify against this step's
@@ -249,12 +272,17 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
           : 'already dispatched once this run; no idempotency probe declared';
         const outcome = await escalate(step, detail, step.checkpoint);
         if (outcome !== 'resumed') return outcome;
+        writer.journal({ stepId: step.id, status: 'confirmed' });
+        writer.write({ kind: 'step_succeeded', stepId: step.id, detail: 'confirmed via human escalation' });
         break; // the human confirmed this step's outcome; move to the next one.
       }
 
       if (step.risk === 'irreversible') dispatched.add(step.id);
 
-      writer.journal({ stepId: step.id, status: 'dispatched' });
+      // fsync before dispatch, only for irreversible steps: if the process crashes
+      // between this write and the actual dispatch (or between dispatch and reading
+      // the checkpoint), dispatch state must remain determinable from disk, not memory.
+      writer.journal({ stepId: step.id, status: 'dispatched' }, step.risk === 'irreversible');
       const actResult = await deps.surface.act(interpolated.action);
       if (!actResult.ok) {
         const kind = actResult.reason === 'ambiguous' ? 'locator_ambiguous' : actResult.reason === 'policy_denied' ? 'policy_denied' : 'locator_unresolved';

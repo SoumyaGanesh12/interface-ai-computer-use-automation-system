@@ -1,0 +1,8 @@
+{"runId":"member-savings-balance-1789246145293","seq":0,"timestamp":"2026-09-12T20:49:05.297Z","kind":"run_started","detail":"member-savings-balance","inputs":{"memberId":"41382"}}
+{"runId":"member-savings-balance-1789246145293","seq":1,"timestamp":"2026-09-12T20:49:05.945Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"member-savings-balance-1789246145293","seq":2,"timestamp":"2026-09-12T20:49:06.528Z","kind":"step_succeeded","stepId":"enter-username"}
+{"runId":"member-savings-balance-1789246145293","seq":3,"timestamp":"2026-09-12T20:49:06.992Z","kind":"step_succeeded","stepId":"enter-password"}
+{"runId":"member-savings-balance-1789246145293","seq":4,"timestamp":"2026-09-12T20:49:07.427Z","kind":"step_succeeded","stepId":"submit-login"}
+{"runId":"member-savings-balance-1789246145293","seq":5,"timestamp":"2026-09-12T20:49:08.058Z","kind":"step_succeeded","stepId":"enter-member-id"}
+{"runId":"member-savings-balance-1789246145293","seq":6,"timestamp":"2026-09-12T20:49:08.403Z","kind":"step_succeeded","stepId":"submit-search"}
+{"runId":"member-savings-balance-1789246145293","seq":7,"timestamp":"2026-09-12T20:49:08.457Z","kind":"run_finished","detail":"success","result":{"status":"success","capability":"member-savings-balance","version":"1.0.0","runId":"member-savings-balance-1789246145293","durationMs":3162,"locatorTiers":[{"stepId":"enter-username","recordedTier":1,"resolvedTier":1},{"stepId":"enter-password","recordedTier":2,"resolvedTier":2},{"stepId":"submit-login","recordedTier":1,"resolvedTier":1},{"stepId":"enter-member-id","recordedTier":2,"resolvedTier":2},{"stepId":"submit-search","recordedTier":3,"resolvedTier":3}],"recoveries":[],"drift":[],"humanInterventions":[],"outputs":{"savingsBalance":1204.5}}}
