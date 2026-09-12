@@ -21,7 +21,9 @@ npm run check
 Runs the TypeScript compiler, the `dependency-cruiser` architectural boundary rules --
 for example, the replay engine can never import a model client, and Playwright stays
 confined to the surface layer so a desktop adapter can drop in later without touching
-anything above it -- and the test suite.
+anything above it -- and the test suite, which includes a real headless-Chromium
+integration test against the fixture (it starts its own fixture instance on an ephemeral
+port; no need to run `npm run fixture` separately first).
 
 ## Try the fixture app
 
@@ -75,9 +77,32 @@ GET /_control/reset
   closed, reviewable transform registry (`trim`, `currency`, `integer`, `date`,
   `regexCapture`). An unresolved target or a failed transform is always a distinct
   failure, never a silently corrupted success.
-- `fixture/` -- the hostile console described above. Shares nothing with `src/` --
-  no imported types, no shared constants -- enforced in both directions by
-  dependency-cruiser, the same way it protects `src/`.
+- `fixture/` -- the hostile console described above. `app.ts` holds the Express app;
+  `server.ts` is the CLI entry point (`app.listen`), split apart so tests can run their
+  own instance on an ephemeral port. Shares nothing with `src/` -- no imported types, no
+  shared constants -- enforced in both directions by dependency-cruiser.
+- `src/surface/roles.ts` -- Chrome's accessibility role strings (empirically inconsistent
+  casing) mapped to our closed Role enum; anything unmapped becomes `'unknown'` rather
+  than a guess.
+- `src/surface/dom-lite.ts` -- one `DOM.getDocument({ pierce: true })` call turned into a
+  parent/child tree keyed by `backendNodeId`, used to compute `textContext` (the label
+  cell to the left, the row it's in) the way a hostile layout table actually requires --
+  the accessibility tree alone has no semantics to expose for that.
+- `src/surface/perceive.ts` -- builds an `Observation` from a live page: one CDP session,
+  `Accessibility.getFullAXTree` scoped per frame via `frameId` (confirmed against the
+  fixture's frameset before writing this -- a same-origin frame has no CDP session of its
+  own). Also drops a `StaticText` node when an ancestor already carries the exact same
+  name, since Chrome routinely represents a control's own name as a duplicate text
+  descendant, which would otherwise make every text-based locator ambiguous against
+  itself.
+- `src/surface/element-handle.ts` -- bridges a `backendNodeId` to a live Playwright handle,
+  needed only for `select` (a native dropdown can't be driven by coordinates alone).
+- `src/surface/act.ts` -- dispatches one `Action`: resolves the target against a freshly
+  taken observation, then clicks/types via a computed bounding-box center point and real
+  mouse/keyboard events -- no DOM handle needed for click/type, which is also what a
+  desktop adapter would have to assume.
+- `src/surface/playwright-surface.ts` -- the one `Surface` implementation, wiring the
+  above together. Headed by default (human takeover needs an operable window later).
 - `.dependency-cruiser.cjs` -- the boundary rules, wired before any code they govern.
 
 The artifact schema and deterministic replay are built and proven out before the

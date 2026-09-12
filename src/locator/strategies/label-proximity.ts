@@ -12,6 +12,7 @@ export function matchLabelProximity(strategy: Strategy, nodes: readonly Observed
   const label = strategy.labelText.trim().toLowerCase();
   return nodes.filter((n) => {
     if (strategy.role && n.role !== strategy.role) return false;
+    if (strategy.framePath && n.framePath.join('/') !== strategy.framePath.join('/')) return false;
     return !!n.textContext && n.textContext.toLowerCase().includes(label);
   });
 }

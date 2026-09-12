@@ -10,15 +10,33 @@
 import * as z from 'zod';
 import { RoleSchema } from '../surface/observation';
 
+/**
+ * `framePath` is optional on every tier below structuralPath, not just declared on it:
+ * frames routinely contain identically- or similarly-named controls (see Observation's
+ * own framePath field), so any tier may need to scope itself to one frame to stay
+ * unambiguous. Absent means "match in any frame."
+ */
 export const LocatorStrategySchema = z.discriminatedUnion('strategy', [
-  z.object({ strategy: z.literal('roleAndName'), role: RoleSchema, name: z.string().min(1), exact: z.boolean().optional() }),
+  z.object({
+    strategy: z.literal('roleAndName'),
+    role: RoleSchema,
+    name: z.string().min(1),
+    exact: z.boolean().optional(),
+    framePath: z.array(z.string()).optional(),
+  }),
   z.object({
     strategy: z.literal('labelProximity'),
     labelText: z.string().min(1),
     direction: z.enum(['right', 'below', 'same-cell']),
     role: RoleSchema.optional(),
+    framePath: z.array(z.string()).optional(),
   }),
-  z.object({ strategy: z.literal('visibleText'), text: z.string().min(1), role: RoleSchema.optional() }),
+  z.object({
+    strategy: z.literal('visibleText'),
+    text: z.string().min(1),
+    role: RoleSchema.optional(),
+    framePath: z.array(z.string()).optional(),
+  }),
   z.object({ strategy: z.literal('structuralPath'), framePath: z.array(z.string()), path: z.string().min(1) }),
   z.object({ strategy: z.literal('anchoredCoordinates'), anchorName: z.string().min(1), dx: z.number(), dy: z.number() }),
 ]);

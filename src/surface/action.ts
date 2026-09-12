@@ -28,7 +28,8 @@ export const ActionResultSchema = z.discriminatedUnion('ok', [
     ok: z.literal(true),
     /** Present when the action was a `read`. */
     value: z.string().optional(),
-    resolvedTier: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+    /** Absent for `navigate` -- there is no locator to resolve. */
+    resolvedTier: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).optional(),
   }),
   z.object({
     ok: z.literal(false),

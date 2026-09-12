@@ -7,6 +7,7 @@ type Strategy = Extract<LocatorStrategy, { strategy: 'roleAndName' }>;
 export function matchRoleAndName(strategy: Strategy, nodes: readonly ObservedNode[]): ObservedNode[] {
   return nodes.filter((n) => {
     if (n.role !== strategy.role) return false;
+    if (strategy.framePath && n.framePath.join('/') !== strategy.framePath.join('/')) return false;
     return strategy.exact
       ? n.name === strategy.name
       : n.name.trim().toLowerCase() === strategy.name.trim().toLowerCase();
