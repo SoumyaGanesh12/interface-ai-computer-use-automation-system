@@ -18,10 +18,10 @@ No API key or external service is needed for anything in this repo yet.
 npm run check
 ```
 
-Runs the TypeScript compiler and the `dependency-cruiser` architectural boundary rules --
+Runs the TypeScript compiler, the `dependency-cruiser` architectural boundary rules --
 for example, the replay engine can never import a model client, and Playwright stays
 confined to the surface layer so a desktop adapter can drop in later without touching
-anything above it.
+anything above it -- and the test suite.
 
 ## Layout
 
