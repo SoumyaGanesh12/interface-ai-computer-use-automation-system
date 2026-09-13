@@ -1,0 +1,223 @@
+{
+  "runId": "discovery-1789253320638",
+  "goal": "Order a replacement card for member 41382.",
+  "target": "http://localhost:4400",
+  "model": "gemini-3.5-flash-lite",
+  "startedAt": "2026-09-12T22:48:44.725Z",
+  "finishedAt": "2026-09-12T22:49:51.241Z",
+  "status": "escalation_timeout",
+  "reason": "no response before the escalation window elapsed",
+  "totalTokens": 4591,
+  "steps": [
+    {
+      "stepIndex": 0,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "open the login page",
+      "action": {
+        "kind": "navigate",
+        "url": "http://localhost:4400/login"
+      },
+      "observationHash": "e3b0c44298fc1c14",
+      "result": "ok"
+    },
+    {
+      "stepIndex": 1,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "enter the operator username",
+      "action": {
+        "kind": "type",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "Real <label for> on this field.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "textbox",
+                "name": "Username"
+              }
+            }
+          ]
+        },
+        "text": "svc.operator"
+      },
+      "observationHash": "5f82c5b0bd4efaad",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 2,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "enter the operator password",
+      "action": {
+        "kind": "typeCredential",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.8,
+              "note": "No label -- only the adjacent 'Password' cell.",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Password",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ]
+        },
+        "credentialRef": "FIXTURE_OPERATOR_PASSWORD"
+      },
+      "observationHash": "172b3f6c2429f964",
+      "result": "ok",
+      "resolvedTier": 2
+    },
+    {
+      "stepIndex": 3,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "submit the login form",
+      "action": {
+        "kind": "click",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "A real <button>.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "button",
+                "name": "Log In"
+              }
+            }
+          ]
+        }
+      },
+      "observationHash": "aa2a59884ed7ae37",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 4,
+      "source": "model",
+      "rationale": "To order a replacement card for member 41382, I need to first enter the member ID into the search input box.",
+      "intent": "Type the member ID into the search textbox",
+      "action": {
+        "kind": "type",
+        "target": {
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ],
+          "recordedTier": 2
+        },
+        "text": "41382"
+      },
+      "observationHash": "99ff9f0b7e1d7749",
+      "result": "ok",
+      "resolvedTier": 2
+    },
+    {
+      "stepIndex": 5,
+      "source": "model",
+      "rationale": "After typing the member ID, I need to click the Search button to find the member.",
+      "intent": "Click the Search button",
+      "action": {
+        "kind": "click",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.9,
+              "note": "Unique cell named \"Search\".",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "cell",
+                "name": "Search"
+              }
+            },
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "cell"
+              }
+            },
+            {
+              "tier": 3,
+              "confidence": 0.5,
+              "note": "Falls back to matching visible text \"Search\".",
+              "locator": {
+                "strategy": "visibleText",
+                "text": "Search",
+                "role": "cell"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "observationHash": "424a97c3f9da0da7",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 6,
+      "source": "model",
+      "rationale": "The member profile shows that a replacement card was already ordered with reference REF-32884. However, the goal is to order a replacement card for member 41382, and there is an 'Order Replacement Card' button available on the page.",
+      "intent": "Click the Order Replacement Card button",
+      "action": {
+        "kind": "click",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.9,
+              "note": "Unique text named \"Order Replacement Card\".",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "text",
+                "name": "Order Replacement Card"
+              }
+            },
+            {
+              "tier": 3,
+              "confidence": 0.5,
+              "note": "Falls back to matching visible text \"Order Replacement Card\".",
+              "locator": {
+                "strategy": "visibleText",
+                "text": "Order Replacement Card",
+                "role": "text"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "observationHash": "93d030e3a6ebda0e",
+      "result": "failed",
+      "detail": "escalated, but no response before the escalation window elapsed"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{"runId":"discovery-1789247803167","seq":0,"timestamp":"2026-09-12T21:16:43.454Z","kind":"run_started","detail":"discover: Order a replacement card for member 41382."}
+{"runId":"discovery-1789247803167","seq":1,"timestamp":"2026-09-12T21:16:53.297Z","kind":"escalation_raised","detail":"classified as a possibly irreversible action: click"}
+{"runId":"discovery-1789247803167","seq":2,"timestamp":"2026-09-12T21:16:58.333Z","kind":"escalation_resolved","detail":"timeout"}
+{"runId":"discovery-1789247803167","seq":3,"timestamp":"2026-09-12T21:16:58.334Z","kind":"run_finished","detail":"escalation_timeout","result":{"status":"escalation_timeout","reason":"no response before the escalation window elapsed","totalTokens":5393}}

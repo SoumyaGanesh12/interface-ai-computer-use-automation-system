@@ -76,6 +76,47 @@ real `replay()` call pausing mid-flight, a simulated operator resuming it, a tim
 when nobody responds, and re-escalation up to the per-run cap when a resume turns out
 not to have fixed anything.
 
+## Try a real discovery run
+
+```bash
+cp .env.example .env   # fill in GEMINI_API_KEY
+npm run fixture        # in one terminal
+npx tsx --env-file=.env src/cli/discover.ts --goal "Find member 41382 and report their savings balance." --headless
+```
+
+(`npx tsx` directly, not `npm run discover --`, since npm's own argument parsing on some
+platforms swallows a `--flag value` passed after `--` before the script ever sees it.)
+
+This wires a real Gemini-backed model client and a real headed Chromium `Surface` into
+the observe-decide-act loop (`src/agent/discover.ts`): the model sees only the structured
+accessibility-tree observation, picks a target by node id, and the loop builds and
+self-verifies the actual locator (`src/locator/generate.ts`) rather than trusting
+whatever the model invents. A fixed login preflight runs before the model ever sees a
+page. Every run writes a `traces/<runId>.json` step-by-step record and real evidence
+under `evidence/<runId>/`, the same evidence writer replay uses.
+
+A click classified as possibly irreversible (`src/policy/risk.ts` -- a stated,
+deliberately coarse keyword heuristic, not semantic understanding) escalates through the
+identical `RunLease`/`OperatorChannel` path a stuck replay uses, rather than dispatching
+automatically:
+
+```bash
+npx tsx --env-file=.env src/cli/discover.ts --goal "Order a replacement card for member 41382." --escalation-timeout-ms 60000
+```
+
+Drop `--headless` here to actually act as the human yourself: the CLI's own
+`watchForHumanTakeover` prompts on stdin once escalation pauses the run, and pressing
+Enter after completing the action in the still-open browser window calls the same
+`RunLease.takeControl()`/`releaseControl()` a remote operator console would. With nobody
+responding inside the window instead, the run genuinely times out (`escalation_timeout`)
+rather than placing the order.
+
+What a human sees at that pause is not just a generic label: the intervention carries
+the model's own stated rationale, plus an independent scan of the current page for
+"already ordered"-style text (`detectExistingOutcomeWarning` in `src/policy/risk.ts`) --
+so a duplicate-looking situation is flagged directly in the escalation, not left for a
+human to notice on their own or dig out of a trace file afterward.
+
 ## Layout
 
 - `src/surface/observation.ts` -- the normalized perception format that discovery and
@@ -151,7 +192,13 @@ not to have fixed anything.
   checks a known route rather than whatever page a failed checkpoint happened to leave
   the run on, and that dispatch is journaled with `durable: true` -- fsync before the
   click, not after -- so dispatch state remains determinable from disk if a crash
-  happens in between.
+  happens in between. A step's separate, opt-in `precheck` is checked once, before the
+  very first dispatch attempt of an irreversible step, never on retry -- distinct from
+  the idempotency probe, which only ever covers this run's own crash/retry window.
+  Absent by default: an approved capability still acts unattended unless the step's own
+  author declared a precheck worth the cost for that specific action
+  (`tests/replay/idempotency.test.ts` proves a wholly separate later run for an
+  already-ordered member stops there, which the idempotency probe alone never catches).
 - `src/session/lease.ts` -- who controls the live session: `AUTOMATION ->
   PAUSED_PENDING_HUMAN -> HUMAN_CONTROL -> RESUMING -> AUTOMATION` (or `-> ABORTED` on
   timeout). A real, tested state machine; a separate operator process sharing it across
@@ -180,6 +227,46 @@ not to have fixed anything.
   notice after navigating there directly, rather than assuming whatever page a failed
   checkpoint left the run on (`tests/replay/idempotency.test.ts`).
 - `.dependency-cruiser.cjs` -- the boundary rules, wired before any code they govern.
+- `src/model/client.ts` -- the `ModelClient` seam (one `complete(prompt)` method) and its
+  two failure types, kept out of the concrete provider module so discovery never depends
+  on a specific vendor's SDK.
+- `src/model/openai-compatible-client.ts` -- the one implementation: any OpenAI-compatible
+  chat-completions endpoint, constrained to JSON output. Classifying a 429 into rate-limit
+  vs. quota-exhausted is a best-effort heuristic on the error body -- no rate-limit headers
+  were returned when this endpoint was probed.
+- `src/config/model.ts` -- model identity (base URL, model id, key) is required
+  environment, with no default baked into `src/`, so swapping providers is a config edit.
+- `src/locator/generate.ts` -- builds a `LocatorDescriptor` for a node the model picked by
+  id, then resolves it against the same observation and rejects it if it doesn't resolve
+  back to that exact node. Shared with a future recorder, not duplicated.
+- `src/policy/risk.ts` -- classifies a click as safe or irreversible when nothing has
+  already declared its risk (a live discovery decision never has; an artifact step
+  always has). Also `detectExistingOutcomeWarning`, a generic scan of the current
+  observation for "already ordered"-style text, folded into an escalation's context
+  rather than left for a human to notice on their own.
+- `src/agent/decision.ts` -- the schema for what the model returns each step: act (by
+  node id, not a full locator), done (with outputs), or stuck (with a reason).
+- `src/agent/prompt.ts` -- builds the prompt from the goal, compact action history, and
+  the current observation only -- no stale observations for the model to read past.
+- `src/agent/trace.ts` -- the step-by-step record a run leaves behind, decoupled from the
+  raw prompt/response text, that a future recorder compiles into an artifact.
+- `src/agent/discover.ts` -- the observe-decide-act loop. Preflight actions run before
+  the model ever sees an observation. A click classified as possibly irreversible
+  escalates through the same `RunLease`/`OperatorChannel` path replay's executor uses,
+  never dispatches automatically. Bounded by step count, wall-clock time, token budget,
+  consecutive-failure count, and escalations per run -- every stopping condition is a
+  distinct, named status, not a single generic failure.
+- `src/cli/discover.ts` -- the runnable entry point (`npx tsx --env-file=.env
+  src/cli/discover.ts`): wires a real model client and a real headed `Surface` into the
+  loop against the fixture, with a fixed login preflight specific to this app.
+  `watchForHumanTakeover` is the console's side of a real human takeover -- once the
+  lease reports `PAUSED_PENDING_HUMAN` it prompts on stdin and blocks until the operator
+  at the keyboard presses Enter, then claims and releases the lease itself, cancellably
+  (an `AbortSignal`-based prompt) so a timeout elsewhere never leaves it hanging.
+- `src/catalog/step.ts` -- also `precheck`: an explicit, opt-in field distinct from
+  `idempotency`, checked once before the very first dispatch attempt of an irreversible
+  step (never on retry). Absent by default -- an approved capability still acts
+  unattended unless a step's own author declared one worth the cost.
 
 The artifact schema and deterministic replay are built and proven out before the
 LLM-driven agent, so the schema is designed on its own merits rather than shaped around

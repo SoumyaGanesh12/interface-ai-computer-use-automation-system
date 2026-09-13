@@ -9,13 +9,16 @@
   },
   "scripts": {
     "fixture": "tsx fixture/server.ts",
+    "discover": "tsx --env-file=.env src/cli/discover.ts",
     "typecheck": "tsc --noEmit",
     "boundaries": "depcruise src fixture tests --config .dependency-cruiser.cjs",
     "test": "vitest run",
     "check": "npm run typecheck && npm run boundaries && npm run test"
   },
   "dependencies": {
+    "commander": "^12.1.0",
     "express": "^5.1.0",
+    "openai": "^7.15.0",
     "playwright": "^1.63.0",
     "zod": "^4.6.2"
   },

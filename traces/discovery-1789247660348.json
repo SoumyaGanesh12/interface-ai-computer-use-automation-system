@@ -1,0 +1,197 @@
+{
+  "runId": "discovery-1789247660348",
+  "goal": "Find member 41382 and report their savings balance.",
+  "target": "http://localhost:4400",
+  "model": "gemini-3.6-flash",
+  "startedAt": "2026-09-12T21:14:20.582Z",
+  "finishedAt": "2026-09-12T21:14:34.310Z",
+  "status": "done",
+  "outputs": {
+    "savingsBalance": "$1204.50"
+  },
+  "totalTokens": 6057,
+  "steps": [
+    {
+      "stepIndex": 0,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "open the login page",
+      "action": {
+        "kind": "navigate",
+        "url": "http://localhost:4400/login"
+      },
+      "observationHash": "e3b0c44298fc1c14",
+      "result": "ok"
+    },
+    {
+      "stepIndex": 1,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "enter the operator username",
+      "action": {
+        "kind": "type",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "Real <label for> on this field.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "textbox",
+                "name": "Username"
+              }
+            }
+          ]
+        },
+        "text": "svc.operator"
+      },
+      "observationHash": "5f82c5b0bd4efaad",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 2,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "enter the operator password",
+      "action": {
+        "kind": "typeCredential",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.8,
+              "note": "No label -- only the adjacent 'Password' cell.",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Password",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ]
+        },
+        "credentialRef": "FIXTURE_OPERATOR_PASSWORD"
+      },
+      "observationHash": "172b3f6c2429f964",
+      "result": "ok",
+      "resolvedTier": 2
+    },
+    {
+      "stepIndex": 3,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "submit the login form",
+      "action": {
+        "kind": "click",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "A real <button>.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "button",
+                "name": "Log In"
+              }
+            }
+          ]
+        }
+      },
+      "observationHash": "aa2a59884ed7ae37",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 4,
+      "source": "model",
+      "rationale": "Type the requested member ID '41382' into the Member ID search field.",
+      "intent": "Enter member ID 41382 into search input",
+      "action": {
+        "kind": "type",
+        "target": {
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ],
+          "recordedTier": 2
+        },
+        "text": "41382"
+      },
+      "observationHash": "99ff9f0b7e1d7749",
+      "result": "ok",
+      "resolvedTier": 2
+    },
+    {
+      "stepIndex": 5,
+      "source": "model",
+      "rationale": "The member ID '41382' has been entered into the input field. Now I need to click the 'Search' button to submit the query and view the member details.",
+      "intent": "Click Search to find member 41382",
+      "action": {
+        "kind": "click",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.9,
+              "note": "Unique cell named \"Search\".",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "cell",
+                "name": "Search"
+              }
+            },
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "cell"
+              }
+            },
+            {
+              "tier": 3,
+              "confidence": 0.5,
+              "note": "Falls back to matching visible text \"Search\".",
+              "locator": {
+                "strategy": "visibleText",
+                "text": "Search",
+                "role": "cell"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "observationHash": "424a97c3f9da0da7",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 6,
+      "source": "model",
+      "rationale": "Member 41382 (Alice Johnson) has been found on screen, and her Savings account balance is displayed as $1204.50.",
+      "intent": "Report member 41382's savings balance.",
+      "observationHash": "127550b56fa8ee7d",
+      "result": "ok",
+      "detail": "goal reported complete"
+    }
+  ]
+}
