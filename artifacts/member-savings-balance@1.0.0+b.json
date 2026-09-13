@@ -1,0 +1,33 @@
+{
+  "baseCapabilityId": "member-savings-balance",
+  "baseSemver": "1.0.0",
+  "variant": "b",
+  "stepReplacements": {
+    "enter-member-id": {
+      "id": "enter-member-id",
+      "intent": "Enter the account number to search for",
+      "kind": "action",
+      "action": {
+        "kind": "type",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            { "tier": 2, "confidence": 0.8, "note": "Tenant b relabels this field 'Account Number' -- no <label for>, only the adjacent table cell.", "locator": { "strategy": "labelProximity", "labelText": "Account Number", "direction": "right", "role": "textbox" } }
+          ]
+        },
+        "text": "{{memberId}}"
+      },
+      "checkpoint": {
+        "kind": "nodeValue",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            { "tier": 2, "confidence": 0.8, "note": "Tenant b relabels this field 'Account Number' -- no <label for>, only the adjacent table cell.", "locator": { "strategy": "labelProximity", "labelText": "Account Number", "direction": "right", "role": "textbox" } }
+          ]
+        },
+        "op": "nonEmpty"
+      },
+      "risk": "safe"
+    }
+  }
+}
