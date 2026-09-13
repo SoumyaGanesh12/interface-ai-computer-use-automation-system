@@ -1,0 +1,7 @@
+{"runId":"fault-not-found-1789325161929","seq":0,"timestamp":"2026-09-13T18:46:01.931Z","kind":"run_started","detail":"fault-not-found","inputs":{}}
+{"runId":"fault-not-found-1789325161929","seq":1,"timestamp":"2026-09-13T18:46:02.335Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"fault-not-found-1789325161929","seq":2,"timestamp":"2026-09-13T18:46:02.901Z","kind":"step_succeeded","stepId":"enter-username"}
+{"runId":"fault-not-found-1789325161929","seq":3,"timestamp":"2026-09-13T18:46:03.640Z","kind":"step_succeeded","stepId":"enter-password"}
+{"runId":"fault-not-found-1789325161929","seq":4,"timestamp":"2026-09-13T18:46:04.217Z","kind":"step_succeeded","stepId":"submit-login"}
+{"runId":"fault-not-found-1789325161929","seq":5,"timestamp":"2026-09-13T18:46:04.402Z","kind":"step_succeeded","stepId":"set-fault-not_found"}
+{"runId":"fault-not-found-1789325161929","seq":6,"timestamp":"2026-09-13T18:46:04.586Z","kind":"run_finished","detail":"business_outcome","result":{"status":"business_outcome","capability":"fault-not-found","version":"1.0.0","runId":"fault-not-found-1789325161929","durationMs":2656,"locatorTiers":[{"stepId":"enter-username","recordedTier":1,"resolvedTier":1},{"stepId":"enter-password","recordedTier":2,"resolvedTier":2},{"stepId":"submit-login","recordedTier":1,"resolvedTier":1}],"recoveries":[],"drift":[],"humanInterventions":[],"outcome":{"code":"member_not_found","message":"No member was found for the given ID."}}}

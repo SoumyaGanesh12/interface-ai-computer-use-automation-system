@@ -1,0 +1,7 @@
+{"runId":"fault-permission-1789325164591","seq":0,"timestamp":"2026-09-13T18:46:04.592Z","kind":"run_started","detail":"fault-permission","inputs":{}}
+{"runId":"fault-permission-1789325164591","seq":1,"timestamp":"2026-09-13T18:46:04.768Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"fault-permission-1789325164591","seq":2,"timestamp":"2026-09-13T18:46:05.214Z","kind":"step_succeeded","stepId":"enter-username"}
+{"runId":"fault-permission-1789325164591","seq":3,"timestamp":"2026-09-13T18:46:05.770Z","kind":"step_succeeded","stepId":"enter-password"}
+{"runId":"fault-permission-1789325164591","seq":4,"timestamp":"2026-09-13T18:46:06.351Z","kind":"step_succeeded","stepId":"submit-login"}
+{"runId":"fault-permission-1789325164591","seq":5,"timestamp":"2026-09-13T18:46:06.527Z","kind":"step_succeeded","stepId":"set-fault-permission"}
+{"runId":"fault-permission-1789325164591","seq":6,"timestamp":"2026-09-13T18:46:06.698Z","kind":"run_finished","detail":"business_outcome","result":{"status":"business_outcome","capability":"fault-permission","version":"1.0.0","runId":"fault-permission-1789325164591","durationMs":2107,"locatorTiers":[{"stepId":"enter-username","recordedTier":1,"resolvedTier":1},{"stepId":"enter-password","recordedTier":2,"resolvedTier":2},{"stepId":"submit-login","recordedTier":1,"resolvedTier":1}],"recoveries":[],"drift":[],"humanInterventions":[],"outcome":{"code":"permission_denied","message":"The operator does not have permission for this action."}}}

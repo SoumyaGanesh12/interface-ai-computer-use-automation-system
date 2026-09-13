@@ -1,0 +1,9 @@
+{"runId":"fault-dialog-1789325174268","seq":0,"timestamp":"2026-09-13T18:46:14.269Z","kind":"run_started","detail":"fault-dialog","inputs":{}}
+{"runId":"fault-dialog-1789325174268","seq":1,"timestamp":"2026-09-13T18:46:14.460Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"fault-dialog-1789325174268","seq":2,"timestamp":"2026-09-13T18:46:14.919Z","kind":"step_succeeded","stepId":"enter-username"}
+{"runId":"fault-dialog-1789325174268","seq":3,"timestamp":"2026-09-13T18:46:15.470Z","kind":"step_succeeded","stepId":"enter-password"}
+{"runId":"fault-dialog-1789325174268","seq":4,"timestamp":"2026-09-13T18:46:15.973Z","kind":"step_succeeded","stepId":"submit-login"}
+{"runId":"fault-dialog-1789325174268","seq":5,"timestamp":"2026-09-13T18:46:16.246Z","kind":"step_succeeded","stepId":"set-fault-dialog"}
+{"runId":"fault-dialog-1789325174268","seq":6,"timestamp":"2026-09-13T18:46:16.744Z","kind":"recovery_attempted","stepId":"view-member","detail":"dismiss_dialog: succeeded"}
+{"runId":"fault-dialog-1789325174268","seq":7,"timestamp":"2026-09-13T18:46:16.922Z","kind":"step_succeeded","stepId":"view-member"}
+{"runId":"fault-dialog-1789325174268","seq":8,"timestamp":"2026-09-13T18:46:16.923Z","kind":"run_finished","detail":"success","result":{"status":"success","capability":"fault-dialog","version":"1.0.0","runId":"fault-dialog-1789325174268","durationMs":2655,"locatorTiers":[{"stepId":"enter-username","recordedTier":1,"resolvedTier":1},{"stepId":"enter-password","recordedTier":2,"resolvedTier":2},{"stepId":"submit-login","recordedTier":1,"resolvedTier":1}],"recoveries":[{"code":"dismiss_dialog","attempts":1}],"drift":[],"humanInterventions":[],"outputs":{}}}

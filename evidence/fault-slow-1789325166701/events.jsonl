@@ -1,0 +1,8 @@
+{"runId":"fault-slow-1789325166701","seq":0,"timestamp":"2026-09-13T18:46:06.702Z","kind":"run_started","detail":"fault-slow","inputs":{}}
+{"runId":"fault-slow-1789325166701","seq":1,"timestamp":"2026-09-13T18:46:06.852Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"fault-slow-1789325166701","seq":2,"timestamp":"2026-09-13T18:46:07.268Z","kind":"step_succeeded","stepId":"enter-username"}
+{"runId":"fault-slow-1789325166701","seq":3,"timestamp":"2026-09-13T18:46:07.805Z","kind":"step_succeeded","stepId":"enter-password"}
+{"runId":"fault-slow-1789325166701","seq":4,"timestamp":"2026-09-13T18:46:08.316Z","kind":"step_succeeded","stepId":"submit-login"}
+{"runId":"fault-slow-1789325166701","seq":5,"timestamp":"2026-09-13T18:46:08.483Z","kind":"step_succeeded","stepId":"set-fault-slow"}
+{"runId":"fault-slow-1789325166701","seq":6,"timestamp":"2026-09-13T18:46:11.632Z","kind":"step_succeeded","stepId":"view-member"}
+{"runId":"fault-slow-1789325166701","seq":7,"timestamp":"2026-09-13T18:46:11.632Z","kind":"run_finished","detail":"success","result":{"status":"success","capability":"fault-slow","version":"1.0.0","runId":"fault-slow-1789325166701","durationMs":4931,"locatorTiers":[{"stepId":"enter-username","recordedTier":1,"resolvedTier":1},{"stepId":"enter-password","recordedTier":2,"resolvedTier":2},{"stepId":"submit-login","recordedTier":1,"resolvedTier":1}],"recoveries":[],"drift":[],"humanInterventions":[],"outputs":{}}}

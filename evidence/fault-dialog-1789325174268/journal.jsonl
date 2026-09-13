@@ -1,0 +1,13 @@
+{"runId":"fault-dialog-1789325174268","seq":0,"timestamp":"2026-09-13T18:46:14.311Z","stepId":"open-login","status":"dispatched"}
+{"runId":"fault-dialog-1789325174268","seq":1,"timestamp":"2026-09-13T18:46:14.459Z","stepId":"open-login","status":"confirmed"}
+{"runId":"fault-dialog-1789325174268","seq":2,"timestamp":"2026-09-13T18:46:14.547Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"fault-dialog-1789325174268","seq":3,"timestamp":"2026-09-13T18:46:14.919Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"fault-dialog-1789325174268","seq":4,"timestamp":"2026-09-13T18:46:15.002Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"fault-dialog-1789325174268","seq":5,"timestamp":"2026-09-13T18:46:15.469Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"fault-dialog-1789325174268","seq":6,"timestamp":"2026-09-13T18:46:15.559Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"fault-dialog-1789325174268","seq":7,"timestamp":"2026-09-13T18:46:15.972Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"fault-dialog-1789325174268","seq":8,"timestamp":"2026-09-13T18:46:16.183Z","stepId":"set-fault-dialog","status":"dispatched"}
+{"runId":"fault-dialog-1789325174268","seq":9,"timestamp":"2026-09-13T18:46:16.246Z","stepId":"set-fault-dialog","status":"confirmed"}
+{"runId":"fault-dialog-1789325174268","seq":10,"timestamp":"2026-09-13T18:46:16.269Z","stepId":"view-member","status":"dispatched"}
+{"runId":"fault-dialog-1789325174268","seq":11,"timestamp":"2026-09-13T18:46:16.811Z","stepId":"view-member","status":"dispatched"}
+{"runId":"fault-dialog-1789325174268","seq":12,"timestamp":"2026-09-13T18:46:16.921Z","stepId":"view-member","status":"confirmed"}

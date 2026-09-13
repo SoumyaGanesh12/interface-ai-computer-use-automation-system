@@ -1,0 +1,11 @@
+{"runId":"fault-not-found-1789325161929","seq":0,"timestamp":"2026-09-13T18:46:02.008Z","stepId":"open-login","status":"dispatched"}
+{"runId":"fault-not-found-1789325161929","seq":1,"timestamp":"2026-09-13T18:46:02.334Z","stepId":"open-login","status":"confirmed"}
+{"runId":"fault-not-found-1789325161929","seq":2,"timestamp":"2026-09-13T18:46:02.455Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"fault-not-found-1789325161929","seq":3,"timestamp":"2026-09-13T18:46:02.901Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"fault-not-found-1789325161929","seq":4,"timestamp":"2026-09-13T18:46:03.014Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"fault-not-found-1789325161929","seq":5,"timestamp":"2026-09-13T18:46:03.629Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"fault-not-found-1789325161929","seq":6,"timestamp":"2026-09-13T18:46:03.747Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"fault-not-found-1789325161929","seq":7,"timestamp":"2026-09-13T18:46:04.216Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"fault-not-found-1789325161929","seq":8,"timestamp":"2026-09-13T18:46:04.312Z","stepId":"set-fault-not_found","status":"dispatched"}
+{"runId":"fault-not-found-1789325161929","seq":9,"timestamp":"2026-09-13T18:46:04.401Z","stepId":"set-fault-not_found","status":"confirmed"}
+{"runId":"fault-not-found-1789325161929","seq":10,"timestamp":"2026-09-13T18:46:04.439Z","stepId":"view-member","status":"dispatched"}

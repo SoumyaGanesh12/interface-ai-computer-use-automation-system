@@ -1,0 +1,13 @@
+{"runId":"fault-session-expired-1789325176927","seq":0,"timestamp":"2026-09-13T18:46:17.006Z","stepId":"open-login","status":"dispatched"}
+{"runId":"fault-session-expired-1789325176927","seq":1,"timestamp":"2026-09-13T18:46:17.121Z","stepId":"open-login","status":"confirmed"}
+{"runId":"fault-session-expired-1789325176927","seq":2,"timestamp":"2026-09-13T18:46:17.213Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"fault-session-expired-1789325176927","seq":3,"timestamp":"2026-09-13T18:46:17.527Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"fault-session-expired-1789325176927","seq":4,"timestamp":"2026-09-13T18:46:17.620Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"fault-session-expired-1789325176927","seq":5,"timestamp":"2026-09-13T18:46:17.968Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"fault-session-expired-1789325176927","seq":6,"timestamp":"2026-09-13T18:46:18.031Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"fault-session-expired-1789325176927","seq":7,"timestamp":"2026-09-13T18:46:18.382Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"fault-session-expired-1789325176927","seq":8,"timestamp":"2026-09-13T18:46:18.437Z","stepId":"set-fault-session_expired","status":"dispatched"}
+{"runId":"fault-session-expired-1789325176927","seq":9,"timestamp":"2026-09-13T18:46:18.485Z","stepId":"set-fault-session_expired","status":"confirmed"}
+{"runId":"fault-session-expired-1789325176927","seq":10,"timestamp":"2026-09-13T18:46:18.501Z","stepId":"view-member","status":"dispatched"}
+{"runId":"fault-session-expired-1789325176927","seq":11,"timestamp":"2026-09-13T18:46:19.502Z","stepId":"view-member","status":"dispatched"}
+{"runId":"fault-session-expired-1789325176927","seq":12,"timestamp":"2026-09-13T18:46:19.562Z","stepId":"view-member","status":"confirmed"}

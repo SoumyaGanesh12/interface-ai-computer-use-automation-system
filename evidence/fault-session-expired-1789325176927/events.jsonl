@@ -1,0 +1,9 @@
+{"runId":"fault-session-expired-1789325176927","seq":0,"timestamp":"2026-09-13T18:46:16.928Z","kind":"run_started","detail":"fault-session-expired","inputs":{}}
+{"runId":"fault-session-expired-1789325176927","seq":1,"timestamp":"2026-09-13T18:46:17.121Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"fault-session-expired-1789325176927","seq":2,"timestamp":"2026-09-13T18:46:17.527Z","kind":"step_succeeded","stepId":"enter-username"}
+{"runId":"fault-session-expired-1789325176927","seq":3,"timestamp":"2026-09-13T18:46:17.969Z","kind":"step_succeeded","stepId":"enter-password"}
+{"runId":"fault-session-expired-1789325176927","seq":4,"timestamp":"2026-09-13T18:46:18.382Z","kind":"step_succeeded","stepId":"submit-login"}
+{"runId":"fault-session-expired-1789325176927","seq":5,"timestamp":"2026-09-13T18:46:18.485Z","kind":"step_succeeded","stepId":"set-fault-session_expired"}
+{"runId":"fault-session-expired-1789325176927","seq":6,"timestamp":"2026-09-13T18:46:19.459Z","kind":"recovery_attempted","stepId":"view-member","detail":"relogin: succeeded"}
+{"runId":"fault-session-expired-1789325176927","seq":7,"timestamp":"2026-09-13T18:46:19.562Z","kind":"step_succeeded","stepId":"view-member"}
+{"runId":"fault-session-expired-1789325176927","seq":8,"timestamp":"2026-09-13T18:46:19.563Z","kind":"run_finished","detail":"success","result":{"status":"success","capability":"fault-session-expired","version":"1.0.0","runId":"fault-session-expired-1789325176927","durationMs":2635,"locatorTiers":[{"stepId":"enter-username","recordedTier":1,"resolvedTier":1},{"stepId":"enter-password","recordedTier":2,"resolvedTier":2},{"stepId":"submit-login","recordedTier":1,"resolvedTier":1}],"recoveries":[{"code":"relogin","attempts":1}],"drift":[],"humanInterventions":[],"outputs":{}}}
