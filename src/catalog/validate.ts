@@ -32,6 +32,7 @@ export function validateArtifact(raw: unknown): ValidateResult {
   const entries: LabeledMatcher[] = [
     ...parsed.data.recovery.map((r) => ({ label: `recovery:${r.code}`, matcher: r.detect })),
     ...parsed.data.outcomes.map((o) => ({ label: `outcome:${o.code}`, matcher: o.detect })),
+    ...parsed.data.steps.filter((s) => s.precheck).map((s) => ({ label: `precheck:${s.id}`, matcher: s.precheck!.detect })),
   ];
   const overlaps = findOverlaps(entries);
   if (overlaps.length > 0) return { ok: false, reason: overlaps.join('; ') };

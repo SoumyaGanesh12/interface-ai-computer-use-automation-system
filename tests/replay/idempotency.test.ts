@@ -6,6 +6,10 @@
  * replay result -- a buggy double-dispatch would overwrite that store with a second
  * reference, which the assertions below would catch even if the reported output
  * happened to look fine.
+ *
+ * Also proves the separate, opt-in precheck: a wholly independent later run for a
+ * member who already has a completed order -- the idempotency probe alone never covers
+ * this, since it only ever activates for a redispatch within the same run.
  */
 import { readFileSync } from 'node:fs';
 import type { Server } from 'node:http';
@@ -109,6 +113,31 @@ describe('order-replacement-card: at-most-once', () => {
     // The real proof: exactly one order exists, and it matches what was reported --
     // a buggy redispatch would have overwritten the store with a second reference.
     expect(findOrder('77410')?.reference).toBe(reportedRef);
+  }, 30000);
+
+  it('a fresh, separate run for a member who already has an order stops at the precheck, never clicking Confirm Order again', async () => {
+    // Depends on the first test above having already placed a real order for 20957 --
+    // this is deliberately a second, wholly separate replay() call (a fresh `dispatched`
+    // Set, exactly like a later, independent invocation), which the in-run idempotency
+    // probe alone would never catch: it only ever activates for a redispatch attempt
+    // within the same run. Proving this needs the precheck to have fired instead.
+    const before = findOrder('20957')?.reference;
+    expect(before).toMatch(/^REF-\d+$/);
+
+    const artifact = loadRetargeted(baseUrl);
+    const result = await replay(artifact, { memberId: '20957' }, {
+      surface,
+      runId: generateRunId(artifact.capability.id),
+      lease: new RunLease(),
+      operatorChannel: new ConsoleOperatorChannel(),
+    });
+
+    expect(result.status).toBe('business_outcome');
+    expect(result.outcome?.code).toBe('already_ordered');
+
+    // The real proof: the stored reference is unchanged -- a redispatch would have
+    // overwritten it with a fresh one.
+    expect(findOrder('20957')?.reference).toBe(before);
   }, 30000);
 
   it('escalates rather than blindly redispatching when no idempotency probe is declared', async () => {

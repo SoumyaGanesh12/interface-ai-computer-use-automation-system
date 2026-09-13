@@ -154,6 +154,11 @@
         "probe": { "kind": "textPresent", "scope": "page", "pattern": "already ordered" },
         "key": "{{memberId}}",
         "navigateTo": "http://localhost:4400/member?id={{memberId}}"
+      },
+      "precheck": {
+        "detect": { "kind": "textPresent", "scope": "page", "pattern": "already ordered" },
+        "code": "already_ordered",
+        "message": "A replacement card has already been ordered for this member; not placing a duplicate order."
       }
     }
   ],

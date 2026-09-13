@@ -19,6 +19,12 @@
  * so outcomes are checked once more after the loop, before extraction, not just between
  * steps.
  *
+ * step.precheck is a distinct, opt-in mechanism from the idempotency probe above:
+ * checked once, before the very first dispatch attempt of an irreversible step (never on
+ * retry), against whatever the step's own author declared worth confirming first. Absent
+ * by default -- an approved capability still acts unattended unless this specific step
+ * asked for it -- so it changes nothing for steps that don't declare one.
+ *
  * Policy is enforced inside Surface.act itself (the single choke point), not here --
  * this only configures the surface with this artifact's allowlist before the first
  * action. Every run, regardless of how it ends, is written through one evidence sink,
@@ -238,6 +244,18 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
       const interpolated = interpolateAction(rawAction, inputs);
       if (!interpolated.ok) {
         return failure('hard', step.id, step.intent, 'every {{template}} to resolve', `unresolved template "{{${interpolated.missing}}}"`);
+      }
+
+      // An explicit, opt-in precondition -- checked only before the very first dispatch
+      // attempt this run, never on retry (idempotency.probe already owns that window).
+      // Absent by default: an approved capability still acts unattended unless this
+      // specific step's own author declared it worth checking the world first.
+      if (step.risk === 'irreversible' && !dispatched.has(step.id) && step.precheck) {
+        const precheckResult = evaluate(step.precheck.detect, observation);
+        if (precheckResult.satisfied) {
+          writer.write({ kind: 'step_succeeded', stepId: step.id, detail: `precheck matched, not dispatched: ${precheckResult.evidence}` });
+          return finish({ status: 'business_outcome', ...base(), outcome: { code: step.precheck.code, message: step.precheck.message } });
+        }
       }
 
       // Irreversible + already dispatched this run: never redispatch. Consult idempotency instead.
