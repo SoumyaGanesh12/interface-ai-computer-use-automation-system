@@ -16,6 +16,20 @@ module.exports = {
       to: { dependencyTypes: ['npm'], path: '^openai($|/)' },
     },
     {
+      name: 'recorder-reaches-model',
+      severity: 'error',
+      comment: 'Compiling a trace re-runs its already-decided actions; it must never re-decide anything, so no path to a model client, direct or transitive (agent/trace.ts is fine -- it is a data shape with no model dependency of its own).',
+      from: { path: '^src/recorder' },
+      to: { path: '^src/model(/|$)', reachable: true },
+    },
+    {
+      name: 'recorder-imports-openai',
+      severity: 'error',
+      comment: 'Same invariant, npm-package case.',
+      from: { path: '^src/recorder' },
+      to: { dependencyTypes: ['npm'], path: '^openai($|/)' },
+    },
+    {
       name: 'playwright-outside-surface',
       severity: 'error',
       comment: 'Invariant 3: Playwright/CDP stay inside src/surface, so a desktop adapter can drop in later.',

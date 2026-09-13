@@ -10,7 +10,8 @@ deterministically, with no model in the decision loop.
 npm install
 ```
 
-No API key or external service is needed for anything in this repo yet.
+No API key or external service is needed except for a real discovery run (below);
+everything else runs entirely against the local fixture.
 
 ## Verify
 
@@ -92,8 +93,10 @@ the observe-decide-act loop (`src/agent/discover.ts`): the model sees only the s
 accessibility-tree observation, picks a target by node id, and the loop builds and
 self-verifies the actual locator (`src/locator/generate.ts`) rather than trusting
 whatever the model invents. A fixed login preflight runs before the model ever sees a
-page. Every run writes a `traces/<runId>.json` step-by-step record and real evidence
-under `evidence/<runId>/`, the same evidence writer replay uses.
+page. Every step prints live as it happens (`[3] preflight: enter the operator username
+-> ok`) rather than leaving the terminal silent until the run ends. Every run writes a
+`traces/<runId>.json` step-by-step record and real evidence under `evidence/<runId>/`,
+the same evidence writer replay uses.
 
 A click classified as possibly irreversible (`src/policy/risk.ts` -- a stated,
 deliberately coarse keyword heuristic, not semantic understanding) escalates through the
@@ -116,6 +119,97 @@ the model's own stated rationale, plus an independent scan of the current page f
 "already ordered"-style text (`detectExistingOutcomeWarning` in `src/policy/risk.ts`) --
 so a duplicate-looking situation is flagged directly in the escalation, not left for a
 human to notice on their own or dig out of a trace file afterward.
+
+A successful run can also compile itself into a draft artifact immediately, in the same
+terminal, rather than requiring a separate command and a manually copied trace path
+afterward:
+
+```bash
+npx tsx --env-file=.env src/cli/discover.ts --goal "Find member 41382 and report their savings balance." --headless --record --capability-id my-balance-lookup --capability-name "My Balance Lookup"
+```
+
+On success this writes `artifacts/my-balance-lookup@1.0.0.json` directly; on anything
+else, it says so and skips recording rather than compiling a run that never finished.
+
+## Try the recorder
+
+`tests/recorder/compile.test.ts` compiles the two committed discovery traces above into
+draft artifacts, for real:
+
+```bash
+npx vitest run tests/recorder/compile.test.ts
+```
+
+A trace only records each step's *pre-action* observation -- what the model was shown
+before deciding -- never a checkpoint, since there was nothing to check yet. So
+`compileArtifact` (`src/recorder/compile.ts`) re-runs the trace's already-decided
+actions against a real browser one more time, and derives each step's checkpoint from
+what that real run actually produces (an enforced dependency-cruiser rule keeps this
+pass from ever reaching a model client -- every action was already decided when the
+trace was recorded, so there is nothing left to decide). The resulting artifact starts
+`approval.state: 'draft'`; nothing promotes it to `approved` automatically.
+
+A literal typed value becomes a reusable `{{param}}` input (`ParamRegistry` in
+`src/recorder/compile.ts`) when it verbatim-matches a whole word in the discovery goal --
+typing "41382" for a goal that names member 41382 becomes `{{memberId}}`, so the same
+compiled capability answers this for *any* member, not only the one it happened to be
+shown (a fixed constant like the login username, which never appears in the goal, stays
+literal). The same value reused across steps shares one declared input; two different
+values that would derive the same parameter name fail the compile with a clear reason
+rather than guessing which is which.
+
+A declared output value is searched for on the run's own final page and turned into a
+real, self-verifying extraction the same way -- `"$1204.50"` becomes a `currency`-typed
+output read from the member's Savings cell, so replaying for a different member returns
+*that* member's real balance, not an empty result you have to interpret yourself. Exactly
+one matching node is required: none, or more than one, fails the compile rather than
+guessing which one was meant (the same discipline `ParamRegistry` and the locator ladder
+already apply). This only happens when the run ended safely -- an escalate-terminated
+run never dispatches its last step, so there's no live final page to search, and
+`outputs` stays empty for that one.
+
+`discover --record` is the common path (pass `--overwrite` to replace an existing
+artifact at the same path instead of being refused); `record` also exists standalone,
+for compiling an existing trace from an earlier run (one you already have on disk, or
+one someone else produced) without repeating discovery:
+
+```bash
+npm run fixture   # in one terminal
+
+npm run record -- \
+  --trace traces/discovery-1789247660348.json \
+  --capability-id my-balance-lookup \
+  --name "My Balance Lookup" \
+  --description "Compiled from a discovery trace."
+
+npm run replay -- --artifact "artifacts/my-balance-lookup@1.0.0.json" --input memberId=77410
+```
+
+That last command replays a capability compiled against member 41382 while asking about
+a completely different member (77410) -- and reports that member's real balance
+(`{"savingsBalance": 58900}`), proving both the `{{memberId}}` substitution and the
+output extraction are real, not just a cosmetic difference in the JSON.
+
+(Use `npx tsx --env-file=.env src/cli/record.ts ...` / `.../replay.ts ...` directly
+instead of `npm run record --`/`npm run replay --` if your platform's npm swallows a
+`--flag value` passed after `--`, the same issue noted for `discover` above.) `replay`
+never loads a model client at all -- disconnect from the network entirely and it still
+runs the same way, since every locator and checkpoint is already sitting in the artifact
+file `record` wrote.
+
+An irreversible step is never re-dispatched just to compile it -- that would make
+compiling a capability a second, unwanted execution of its own irreversible effect.
+Reaching one converts it into a `kind: 'escalate'` step and stops compiling there,
+proven against the fixture's own order store: compiling the order-replacement trace
+never places a real order. The test also proves the other half -- once a real human
+performs the real action later, during an actual `replay()` of the compiled artifact,
+that escalate step's checkpoint verifies correctly and the run completes.
+
+Output extraction applies the same discipline: a declared output value is searched for
+on the run's own final page, and exactly one matching node becomes a real, self-
+verifying extraction -- zero matches or more than one fails the compile instead of
+guessing. Only possible when the run ended safely; an escalate-terminated run has no
+live final page to search, so `outputs` stays empty for that one.
 
 ## Layout
 
@@ -249,7 +343,7 @@ human to notice on their own or dig out of a trace file afterward.
 - `src/agent/prompt.ts` -- builds the prompt from the goal, compact action history, and
   the current observation only -- no stale observations for the model to read past.
 - `src/agent/trace.ts` -- the step-by-step record a run leaves behind, decoupled from the
-  raw prompt/response text, that a future recorder compiles into an artifact.
+  raw prompt/response text, that `src/recorder/compile.ts` compiles into an artifact.
 - `src/agent/discover.ts` -- the observe-decide-act loop. Preflight actions run before
   the model ever sees an observation. A click classified as possibly irreversible
   escalates through the same `RunLease`/`OperatorChannel` path replay's executor uses,
@@ -258,11 +352,37 @@ human to notice on their own or dig out of a trace file afterward.
   distinct, named status, not a single generic failure.
 - `src/cli/discover.ts` -- the runnable entry point (`npx tsx --env-file=.env
   src/cli/discover.ts`): wires a real model client and a real headed `Surface` into the
-  loop against the fixture, with a fixed login preflight specific to this app.
-  `watchForHumanTakeover` is the console's side of a real human takeover -- once the
-  lease reports `PAUSED_PENDING_HUMAN` it prompts on stdin and blocks until the operator
-  at the keyboard presses Enter, then claims and releases the lease itself, cancellably
-  (an `AbortSignal`-based prompt) so a timeout elsewhere never leaves it hanging.
+  loop against the fixture, with a fixed login preflight specific to this app. `--record`
+  compiles a successful run into a draft artifact immediately, reusing the same open
+  `Surface` rather than requiring a separate command afterward.
+- `src/cli/human-takeover.ts` -- the console's side of a real human takeover, shared by
+  every CLI that can pause on a lease: once it reports `PAUSED_PENDING_HUMAN`, prompts on
+  stdin and blocks until the operator presses Enter, then claims and releases the lease
+  itself -- cancellably (an `AbortSignal`-based prompt), so a timeout elsewhere never
+  leaves it hanging.
+- `src/recorder/compile.ts` -- compiles a successful (`status: 'done'`) discovery trace
+  into a draft artifact by re-running its already-decided actions once more, deriving
+  each step's checkpoint from what that real run actually produces rather than trusting
+  anything the trace itself recorded (it never recorded a checkpoint, only a pre-action
+  observation). Never re-dispatches an irreversible step to compile it -- reaching one
+  converts it to a `kind: 'escalate'` step and stops there. `ParamRegistry` turns a
+  literal typed value into a reusable `{{param}}` input when it verbatim-matches a whole
+  word in the discovery goal, reusing one input for a value repeated across steps and
+  failing the compile outright if two different values would derive the same parameter
+  name, rather than guessing. `inferOutput` finds a declared output value on the run's
+  final page the same way -- one uniquely matching node becomes a self-verifying
+  extraction (reusing `generateDescriptor`), with a transform picked from the value's own
+  shape (`currency`, `integer`, an exact `trim`, or a genericized `regexCapture` when the
+  value sits inside a larger string); no match or more than one fails the compile rather
+  than guessing. Only possible when the run ended safely, since an escalate-terminated
+  run never dispatches its own last step, leaving no live page to search.
+- `src/cli/record.ts` / `src/cli/replay.ts` -- runnable entry points for the recorder and
+  the replay executor: thin wrappers with no logic of their own beyond CLI parsing and
+  writing the compiled file to disk. `replay` never loads a model client at all.
+- `src/cli/report-compiled.ts` -- the console output shared by `record` and `discover
+  --record` after a compile: every step's own intent (not just its kind), which inputs
+  got declared, and an explicit `outputs: none declared` line rather than a bare empty
+  result a reader has to interpret unassisted.
 - `src/catalog/step.ts` -- also `precheck`: an explicit, opt-in field distinct from
   `idempotency`, checked once before the very first dispatch attempt of an irreversible
   step (never on retry). Absent by default -- an approved capability still acts

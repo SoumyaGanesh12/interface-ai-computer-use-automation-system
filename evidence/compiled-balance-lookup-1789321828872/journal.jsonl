@@ -1,0 +1,12 @@
+{"runId":"compiled-balance-lookup-1789321828872","seq":0,"timestamp":"2026-09-13T17:50:29.042Z","stepId":"open-the-login-page","status":"dispatched"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":1,"timestamp":"2026-09-13T17:50:29.274Z","stepId":"open-the-login-page","status":"confirmed"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":2,"timestamp":"2026-09-13T17:50:29.365Z","stepId":"enter-the-operator-username","status":"dispatched"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":3,"timestamp":"2026-09-13T17:50:29.780Z","stepId":"enter-the-operator-username","status":"confirmed"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":4,"timestamp":"2026-09-13T17:50:29.866Z","stepId":"enter-the-operator-password","status":"dispatched"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":5,"timestamp":"2026-09-13T17:50:30.232Z","stepId":"enter-the-operator-password","status":"confirmed"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":6,"timestamp":"2026-09-13T17:50:30.278Z","stepId":"submit-the-login-form","status":"dispatched"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":7,"timestamp":"2026-09-13T17:50:30.608Z","stepId":"submit-the-login-form","status":"confirmed"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":8,"timestamp":"2026-09-13T17:50:30.670Z","stepId":"enter-member-id-41382-into-search-input","status":"dispatched"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":9,"timestamp":"2026-09-13T17:50:30.883Z","stepId":"enter-member-id-41382-into-search-input","status":"confirmed"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":10,"timestamp":"2026-09-13T17:50:30.932Z","stepId":"click-search-to-find-member-41382","status":"dispatched"}
+{"runId":"compiled-balance-lookup-1789321828872","seq":11,"timestamp":"2026-09-13T17:50:31.299Z","stepId":"click-search-to-find-member-41382","status":"confirmed"}
