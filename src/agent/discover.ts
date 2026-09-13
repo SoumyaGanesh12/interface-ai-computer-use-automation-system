@@ -59,6 +59,8 @@ export interface DiscoverOptions {
   maxTokensPerRun?: number;
   escalationTimeoutMs?: number;
   tracesDir?: string;
+  /** Called right after each step is recorded, so a caller (a CLI, a UI) can show live progress instead of silence until the run finishes. */
+  onStep?: (step: TraceStep) => void;
 }
 
 export type DiscoveryStatus =
@@ -120,6 +122,10 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
   opts.surface.setRunId(opts.runId);
 
   const steps: TraceStep[] = [];
+  function pushStep(step: TraceStep): void {
+    steps.push(step);
+    opts.onStep?.(step);
+  }
   const history: HistoryEntry[] = [];
   let stepIndex = 0;
   let totalTokens = 0;
@@ -151,7 +157,7 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
   for (const p of opts.preflight ?? []) {
     const observation = await opts.surface.observe();
     const result = await opts.surface.act(p.action);
-    steps.push({
+    pushStep({
       stepIndex: stepIndex++,
       source: 'preflight',
       rationale: '(preflight)',
@@ -236,12 +242,12 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
     }
 
     if (decision.decision.kind === 'stuck') {
-      steps.push({ stepIndex: stepIndex++, source: 'model', rationale: decision.rationale, intent: decision.intent, observationHash: observation.hash, result: 'failed', detail: decision.decision.reason });
+      pushStep({ stepIndex: stepIndex++, source: 'model', rationale: decision.rationale, intent: decision.intent, observationHash: observation.hash, result: 'failed', detail: decision.decision.reason });
       return finish('stuck', { reason: decision.decision.reason });
     }
 
     if (decision.decision.kind === 'done') {
-      steps.push({ stepIndex: stepIndex++, source: 'model', rationale: decision.rationale, intent: decision.intent, observationHash: observation.hash, result: 'ok', detail: 'goal reported complete' });
+      pushStep({ stepIndex: stepIndex++, source: 'model', rationale: decision.rationale, intent: decision.intent, observationHash: observation.hash, result: 'ok', detail: 'goal reported complete' });
       return finish('done', { outputs: decision.decision.outputs });
     }
 
@@ -270,14 +276,14 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
     }
 
     if (!action) {
-      steps.push({ stepIndex: stepIndex++, source: 'model', rationale: decision.rationale, intent: decision.intent, observationHash: observation.hash, result: 'failed', detail: history.at(-1)?.detail });
+      pushStep({ stepIndex: stepIndex++, source: 'model', rationale: decision.rationale, intent: decision.intent, observationHash: observation.hash, result: 'failed', detail: history.at(-1)?.detail });
       consecutiveFailures++;
       continue;
     }
 
     if (classifyRisk(action) === 'irreversible' && !opts.allowIrreversible) {
       if (escalationCount >= MAX_ESCALATIONS_PER_RUN) {
-        steps.push({
+        pushStep({
           stepIndex: stepIndex++,
           source: 'model',
           rationale: decision.rationale,
@@ -318,7 +324,7 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
       writer.write({ kind: 'escalation_resolved', detail: outcome });
 
       if (outcome === 'timeout') {
-        steps.push({
+        pushStep({
           stepIndex: stepIndex++,
           source: 'model',
           rationale: decision.rationale,
@@ -332,7 +338,7 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
       }
 
       opts.lease.confirmResumed();
-      steps.push({
+      pushStep({
         stepIndex: stepIndex++,
         source: 'model',
         rationale: decision.rationale,
@@ -348,7 +354,7 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
     }
 
     const actResult = await opts.surface.act(action);
-    steps.push({
+    pushStep({
       stepIndex: stepIndex++,
       source: 'model',
       rationale: decision.rationale,

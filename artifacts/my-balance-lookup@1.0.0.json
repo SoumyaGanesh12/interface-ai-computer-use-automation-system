@@ -1,0 +1,375 @@
+{
+  "artifactSchemaVersion": 1,
+  "capability": {
+    "id": "my-balance-lookup",
+    "name": "My Balance Lookup",
+    "semver": "1.0.0",
+    "description": "Find member 41382 and report their savings balance."
+  },
+  "surface": {
+    "kind": "web",
+    "app": "member-services-console",
+    "appVersion": "1.0.0",
+    "variant": "base"
+  },
+  "requires": {
+    "authenticated": true
+  },
+  "approval": {
+    "state": "draft",
+    "verifiedRuns": 0
+  },
+  "inputs": [
+    {
+      "name": "memberId",
+      "type": "string",
+      "required": true,
+      "redact": false,
+      "description": "The Member ID to use for this run."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "savingsBalance",
+      "type": "currency",
+      "nullable": false,
+      "afterStep": "click-the-search-button-to-view-member-4",
+      "extraction": {
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.9,
+              "note": "Unique cell named \"$1204.50\".",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "cell",
+                "name": "$1204.50"
+              }
+            },
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Savings\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Savings",
+                "direction": "right",
+                "role": "cell"
+              }
+            },
+            {
+              "tier": 3,
+              "confidence": 0.5,
+              "note": "Falls back to matching visible text \"$1204.50\".",
+              "locator": {
+                "strategy": "visibleText",
+                "text": "$1204.50",
+                "role": "cell"
+              }
+            }
+          ],
+          "recordedTier": 1
+        },
+        "source": "text",
+        "transform": "currency"
+      },
+      "description": "Recorded from discovery: \"$1204.50\"."
+    }
+  ],
+  "steps": [
+    {
+      "id": "open-the-login-page",
+      "intent": "open the login page",
+      "kind": "action",
+      "action": {
+        "kind": "navigate",
+        "url": "http://localhost:4400/login"
+      },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "Real <label for> on this field.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "textbox",
+                "name": "Username"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "enter-the-operator-username",
+      "intent": "enter the operator username",
+      "kind": "action",
+      "action": {
+        "kind": "type",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "Real <label for> on this field.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "textbox",
+                "name": "Username"
+              }
+            }
+          ],
+          "recordedTier": 1
+        },
+        "text": "svc.operator"
+      },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": {
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.8,
+              "note": "No label -- only the adjacent 'Password' cell.",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Password",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ],
+          "recordedTier": 2
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "enter-the-operator-password",
+      "intent": "enter the operator password",
+      "kind": "action",
+      "action": {
+        "kind": "typeCredential",
+        "target": {
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.8,
+              "note": "No label -- only the adjacent 'Password' cell.",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Password",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ],
+          "recordedTier": 2
+        },
+        "credentialRef": "FIXTURE_OPERATOR_PASSWORD"
+      },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "A real <button>.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "button",
+                "name": "Log In"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "submit-the-login-form",
+      "intent": "submit the login form",
+      "kind": "action",
+      "action": {
+        "kind": "click",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "A real <button>.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "button",
+                "name": "Log In"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": {
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ],
+          "recordedTier": 2
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "type-member-id-41382-into-the-search-box",
+      "intent": "Type member ID 41382 into the search box",
+      "kind": "action",
+      "action": {
+        "kind": "type",
+        "target": {
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ],
+          "recordedTier": 2
+        },
+        "text": "{{memberId}}"
+      },
+      "checkpoint": {
+        "kind": "nodeExists",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.9,
+              "note": "Unique cell named \"Search\".",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "cell",
+                "name": "Search"
+              }
+            },
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "cell"
+              }
+            },
+            {
+              "tier": 3,
+              "confidence": 0.5,
+              "note": "Falls back to matching visible text \"Search\".",
+              "locator": {
+                "strategy": "visibleText",
+                "text": "Search",
+                "role": "cell"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "id": "click-the-search-button-to-view-member-4",
+      "intent": "Click the Search button to view member 41382 details",
+      "kind": "action",
+      "action": {
+        "kind": "click",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.9,
+              "note": "Unique cell named \"Search\".",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "cell",
+                "name": "Search"
+              }
+            },
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "cell"
+              }
+            },
+            {
+              "tier": 3,
+              "confidence": 0.5,
+              "note": "Falls back to matching visible text \"Search\".",
+              "locator": {
+                "strategy": "visibleText",
+                "text": "Search",
+                "role": "cell"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "checkpoint": {
+        "kind": "textPresent",
+        "scope": "page",
+        "pattern": "\\$\\d+\\.\\d+"
+      },
+      "risk": "safe"
+    }
+  ],
+  "outcomes": [],
+  "recovery": [],
+  "policy": {
+    "allowedOrigins": [
+      "http://localhost:4400"
+    ],
+    "allowedActions": [
+      "navigate",
+      "type",
+      "typeCredential",
+      "click"
+    ]
+  },
+  "provenance": {
+    "discoveredAt": "2026-09-13T17:41:36.565Z",
+    "model": "gemini-3.5-flash-lite",
+    "runId": "discovery-1789321296338",
+    "humanAssisted": false
+  }
+}

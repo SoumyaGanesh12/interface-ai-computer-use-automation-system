@@ -5,66 +5,21 @@
  * login sequence is a fixed preflight (the model never sees the login page) -- specific
  * to this fixture, not something src/agent knows about generically.
  */
-import { createInterface } from 'node:readline/promises';
+import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import path from 'node:path';
 import { Command } from 'commander';
 import { loadModelConfig } from '../config/model';
 import { createOpenAiCompatibleClient } from '../model/openai-compatible-client';
 import { createPlaywrightWebSurface } from '../surface/playwright-surface';
 import { discover, type PreflightStep } from '../agent/discover';
+import { compileArtifact } from '../recorder/compile';
+import { reportCompiledArtifact } from './report-compiled';
 import { generateRunId } from '../evidence/run-id';
 import { RunLease } from '../session/lease';
 import { ConsoleOperatorChannel } from '../session/operator-channel';
+import { watchForHumanTakeover } from './human-takeover';
 import type { Allowlist } from '../policy/allowlist';
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * The console's side of a real human takeover: once the lease reports
- * PAUSED_PENDING_HUMAN, this prompts on stdin and blocks until the operator at the
- * keyboard presses Enter -- at which point it claims and releases the lease itself,
- * exactly as a real operator console would after a person finishes acting in the open
- * browser window. Runs concurrently with discover(), polling rather than blocking it,
- * since the escalation notification (ConsoleOperatorChannel) must not itself wait on
- * this -- it only announces the request.
- */
-async function watchForHumanTakeover(lease: RunLease, isRunning: () => boolean): Promise<void> {
-  let prompted = false;
-  while (isRunning()) {
-    if (lease.state === 'PAUSED_PENDING_HUMAN' && !prompted) {
-      prompted = true;
-      const intervention = lease.getIntervention();
-      console.log(`\n>>> A human is needed: ${intervention?.reason}`);
-      console.log('>>> Complete the action yourself in the open browser window, then press Enter here to resume automation.');
-
-      // Cancels the prompt the moment the lease resolves on its own (the escalation
-      // window elapsing), so a slow or absent human never leaves this hanging forever.
-      const abortPrompt = new AbortController();
-      const stopWatchingForAbort = (async () => {
-        while (lease.state === 'PAUSED_PENDING_HUMAN' && isRunning()) await delay(150);
-        abortPrompt.abort();
-      })();
-
-      const rl = createInterface({ input: process.stdin, output: process.stdout });
-      try {
-        await rl.question('Press Enter once done (or wait for the escalation timeout) > ', { signal: abortPrompt.signal });
-        if (lease.state === 'PAUSED_PENDING_HUMAN') {
-          lease.takeControl();
-          lease.releaseControl();
-        }
-      } catch {
-        // the lease resolved on its own before Enter was pressed -- nothing to do
-      } finally {
-        rl.close();
-        await stopWatchingForAbort;
-      }
-    }
-    if (lease.state === 'AUTOMATION') prompted = false;
-    if (lease.state === 'ABORTED') return;
-    await delay(150);
-  }
-}
+import type { TraceFile } from '../agent/trace';
 
 function buildPreflight(baseUrl: string): PreflightStep[] {
   return [
@@ -114,6 +69,15 @@ program
   .option('--allow-irreversible', 'dispatch irreversible actions automatically instead of escalating to a human', false)
   .option('--max-steps <n>', 'maximum model-driven steps before giving up', (v) => Number(v))
   .option('--escalation-timeout-ms <n>', 'how long to wait for a human before an escalated step times out', (v) => Number(v))
+  .option('--record', 'on success, immediately compile the run into a draft artifact -- no separate record step', false)
+  .option('--capability-id <id>', 'required with --record: the compiled capability\'s id')
+  .option('--capability-name <name>', 'the compiled capability\'s display name (defaults to --goal)')
+  .option('--capability-description <text>', 'the compiled capability\'s description (defaults to --goal)')
+  .option('--semver <version>', 'capability version', '1.0.0')
+  .option('--app <app>', 'the surface.app value', 'member-services-console')
+  .option('--app-version <version>', 'the surface.appVersion value', '1.0.0')
+  .option('--variant <variant>', 'the surface.variant value', 'base')
+  .option('--overwrite', 'with --record, overwrite an existing artifact at the output path instead of refusing', false)
   .parse(process.argv);
 
 const opts = program.opts<{
@@ -123,7 +87,21 @@ const opts = program.opts<{
   allowIrreversible: boolean;
   maxSteps?: number;
   escalationTimeoutMs?: number;
+  record: boolean;
+  capabilityId?: string;
+  capabilityName?: string;
+  capabilityDescription?: string;
+  semver: string;
+  app: string;
+  appVersion: string;
+  variant: string;
+  overwrite: boolean;
 }>();
+
+if (opts.record && !opts.capabilityId) {
+  console.error('--record requires --capability-id');
+  process.exit(1);
+}
 
 async function main(): Promise<void> {
   const modelConfig = loadModelConfig();
@@ -161,6 +139,10 @@ async function main(): Promise<void> {
       maxSteps: opts.maxSteps,
       escalationTimeoutMs: opts.escalationTimeoutMs,
       maxTokensPerRun: modelConfig.maxTokensPerRun,
+      onStep: (step) => {
+        const status = step.result === 'ok' ? 'ok' : `failed (${step.detail})`;
+        console.log(`  [${step.stepIndex + 1}] ${step.source}: ${step.intent} -> ${status}`);
+      },
     });
 
     console.log(`\nstatus: ${result.status}`);
@@ -169,6 +151,34 @@ async function main(): Promise<void> {
     console.log(`total tokens: ${result.totalTokens}`);
     console.log(`trace: ${result.tracePath}`);
     console.log(`evidence: evidence/${runId}/`);
+
+    if (opts.record) {
+      if (result.status !== 'done') {
+        console.log('\nrecord: skipped -- only a run that completes with status "done" can be compiled');
+      } else {
+        console.log('\ncompiling into a draft artifact...');
+        const trace = JSON.parse(readFileSync(result.tracePath, 'utf-8')) as TraceFile;
+        const compiled = await compileArtifact(trace, {
+          surface,
+          capability: { id: opts.capabilityId!, name: opts.capabilityName ?? opts.goal, semver: opts.semver, description: opts.capabilityDescription ?? opts.goal },
+          app: opts.app,
+          appVersion: opts.appVersion,
+          variant: opts.variant,
+        });
+        if (!compiled.ok) {
+          console.error(`record failed: ${compiled.reason}`);
+        } else {
+          const outPath = path.join('artifacts', `${opts.capabilityId}@${opts.semver}.json`);
+          mkdirSync(path.dirname(outPath), { recursive: true });
+          if (existsSync(outPath) && !opts.overwrite) {
+            console.error(`refusing to overwrite an existing artifact: ${outPath} (pass --overwrite to replace it)`);
+          } else {
+            writeFileSync(outPath, JSON.stringify(compiled.artifact, null, 2) + '\n', 'utf-8');
+            reportCompiledArtifact(compiled.artifact, outPath);
+          }
+        }
+      }
+    }
 
     process.exitCode = result.status === 'done' ? 0 : 1;
   } finally {

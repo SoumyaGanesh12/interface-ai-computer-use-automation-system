@@ -10,6 +10,8 @@
   "scripts": {
     "fixture": "tsx fixture/server.ts",
     "discover": "tsx --env-file=.env src/cli/discover.ts",
+    "record": "tsx --env-file=.env src/cli/record.ts",
+    "replay": "tsx --env-file=.env src/cli/replay.ts",
     "typecheck": "tsc --noEmit",
     "boundaries": "depcruise src fixture tests --config .dependency-cruiser.cjs",
     "test": "vitest run",
