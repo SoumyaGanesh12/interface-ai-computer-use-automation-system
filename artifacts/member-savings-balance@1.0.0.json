@@ -13,7 +13,7 @@
     "variant": "base"
   },
   "requires": { "authenticated": false },
-  "approval": { "state": "draft", "verifiedRuns": 0 },
+  "approval": { "state": "approved", "verifiedRuns": 2 },
   "inputs": [
     { "name": "memberId", "type": "string", "required": true, "redact": false, "description": "The member ID to search for." }
   ],

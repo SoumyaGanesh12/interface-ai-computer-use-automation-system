@@ -51,7 +51,7 @@ function makeArtifact(checkpointPattern: string): Artifact {
     capability: { id: 'escalation-test', name: 'Escalation Test', semver: '1.0.0', description: 'exercises the escalation mechanism' },
     surface: { kind: 'web', app: 'fixture', appVersion: '1.0.0', variant: 'base' },
     requires: { authenticated: false },
-    approval: { state: 'draft', verifiedRuns: 0 },
+    approval: { state: 'approved', verifiedRuns: 0 },
     inputs: [],
     outputs: [],
     steps: [

@@ -21,6 +21,7 @@ program
   .option('--input <key=value>', 'a capability input, repeatable', (v: string, prev: string[]) => [...prev, v], [] as string[])
   .option('--headless', 'run Chromium headless instead of headed', false)
   .option('--escalation-timeout-ms <n>', 'how long to wait for a human before an escalated step times out', (v) => Number(v))
+  .option('--allow-draft', 'run a capability whose approval.state is not "approved" (refused by default)', false)
   .parse(process.argv);
 
 const opts = program.opts<{
@@ -28,6 +29,7 @@ const opts = program.opts<{
   input: string[];
   headless: boolean;
   escalationTimeoutMs?: number;
+  allowDraft: boolean;
 }>();
 
 function parseInputs(pairs: string[]): Record<string, string> {
@@ -68,6 +70,7 @@ async function main(): Promise<void> {
       lease,
       operatorChannel: new ConsoleOperatorChannel(),
       escalationTimeoutMs: opts.escalationTimeoutMs,
+      allowDraft: opts.allowDraft,
     });
 
     console.log(`\nstatus: ${result.status}`);

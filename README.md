@@ -147,7 +147,12 @@ actions against a real browser one more time, and derives each step's checkpoint
 what that real run actually produces (an enforced dependency-cruiser rule keeps this
 pass from ever reaching a model client -- every action was already decided when the
 trace was recorded, so there is nothing left to decide). The resulting artifact starts
-`approval.state: 'draft'`; nothing promotes it to `approved` automatically.
+`approval.state: 'draft'`; nothing promotes it to `approved` automatically, and that
+state is enforced, not just informational -- `replay()` refuses a non-`'approved'`
+artifact before dispatching anything at all, unless the caller explicitly passes
+`allowDraft: true` (`--allow-draft` on the CLI). See `tests/replay/approval.test.ts` for
+proof: the refusal happens before even the first step resolves, and the identical draft
+artifact succeeds once that opt-in is given.
 
 A literal typed value becomes a reusable `{{param}}` input (`ParamRegistry` in
 `src/recorder/compile.ts`) when it verbatim-matches a whole word in the discovery goal --
@@ -182,11 +187,14 @@ npm run record -- \
   --name "My Balance Lookup" \
   --description "Compiled from a discovery trace."
 
-npm run replay -- --artifact "artifacts/my-balance-lookup@1.0.0.json" --input memberId=77410
+npm run replay -- --artifact "artifacts/my-balance-lookup@1.0.0.json" --input memberId=77410 --allow-draft
 ```
 
-That last command replays a capability compiled against member 41382 while asking about
-a completely different member (77410) -- and reports that member's real balance
+`--allow-draft` is required here because `record` always writes `approval.state: 'draft'`
+-- replay refuses a non-approved artifact by default (see "Approval gating" below), so a
+freshly compiled capability needs this explicit opt-in until a human promotes it. That
+last command replays a capability compiled against member 41382 while asking about a
+completely different member (77410) -- and reports that member's real balance
 (`{"savingsBalance": 58900}`), proving both the `{{memberId}}` substitution and the
 output extraction are real, not just a cosmetic difference in the JSON.
 
@@ -210,6 +218,94 @@ on the run's own final page, and exactly one matching node becomes a real, self-
 verifying extraction -- zero matches or more than one fails the compile instead of
 guessing. Only possible when the run ended safely; an escalate-terminated run has no
 live final page to search, so `outputs` stays empty for that one.
+
+## Approval gating
+
+A compiled capability starts `approval.state: 'draft'`, and that is enforced, not just
+displayed: `replay()` (`src/replay/executor.ts`) checks it before anything else, and
+refuses to dispatch a single step against a non-`'approved'` artifact unless the caller
+explicitly passes `allowDraft: true` (`--allow-draft` on the `replay` CLI). This is what
+"a human has to promote a capability before it runs unattended" actually means in code,
+not just in the schema:
+
+```bash
+npx vitest run tests/replay/approval.test.ts
+```
+
+Proves both directions with the same artifact: the committed
+`member-savings-balance@1.0.0.json` is already `'approved'` and needs no flag; cloning it
+as a draft and replaying it is refused before even the first step resolves (`locatorTiers`
+comes back empty -- nothing was dispatched), and the identical draft clone succeeds once
+`allowDraft: true` is passed.
+
+## Fault matrix
+
+The fixture supports six injectable faults (`GET /_control/fault/:mode` --
+`not_found`, `session_expired`, `permission`, `slow`, `dialog`, `server_error`), a
+test-harness route no real capability is ever allowlisted to reach. Each one is proven
+against a real `replay()` call, not just described:
+
+```bash
+npx vitest run tests/replay/fault-matrix.test.ts
+```
+
+- `not_found` / `permission` -- a declared `outcomes` entry reports a clean
+  `business_outcome`, never a crash, for the fault-injected page directly (not just an
+  incidentally similar "unknown ID" case).
+- `slow` -- replay tolerates the fixture's own 3-second added delay without a false
+  timeout; `status: 'success'` still, just slower.
+- `server_error` -- a real 500 becomes a real `failure` (`checkpoint_failed`), never an
+  uncaught exception.
+- `dialog` -- the existing `dismiss_dialog`-style recovery genuinely clicks through the
+  interstitial and the run completes, proven with `nodeAbsent` on the dismissed button
+  (not a hand-wavy text check).
+- `session_expired` -- a declared recovery re-authenticates through the identical
+  embedded login form the fault page itself renders, then the interrupted step (a
+  `navigate`, chosen deliberately -- it carries no in-page state to lose) redispatches
+  by URL and succeeds once the fault clears. Recovery only ever retries the *current*
+  step, not the whole sequence -- a fault landing on a step whose own effect isn't
+  cleanly redispatchable (e.g. a `type` mid-form) is a real, stated limit of this
+  mechanism, not one this test claims to cover.
+
+## Agent-facing capability catalog
+
+`src/registry/catalog.ts` is the surface an agent would actually call through: a
+`CapabilitySummary` deliberately strips out steps, locators, policy, and provenance --
+what a caller decides *whether and how to invoke* a capability with, not how it works
+internally. An unreadable or malformed artifact file is skipped with a reason, not a
+thrown exception that takes every other capability down with it.
+
+```bash
+npm run catalog -- describe
+npm run catalog -- invoke --id member-savings-balance --input memberId=20957
+```
+
+`invoke` is a thin lookup in front of the same `replay()` everything else uses --
+approval gating, policy enforcement, and escalation all apply exactly as they already do
+elsewhere, not a second implementation of any of it.
+
+## Cross-tenant reuse via override files
+
+The fixture's tenant `b` relabels "Member ID" to "Account Number" -- enough of a real UI
+difference that the tenant-`a` artifact's own locator genuinely doesn't resolve there.
+`src/registry/override.ts` adapts a base artifact for a different tenant by replacing
+only the steps that actually differ, rather than re-discovering the whole flow again: an
+override provides a *complete* replacement `Step` per id (never a partial patch -- a
+step's action, target, and checkpoint are one coherent unit, and merging them
+independently risks a checkpoint that no longer matches what the patched action actually
+produced), and the resulting artifact is re-validated through the same `validateArtifact`
+every other artifact goes through.
+
+```bash
+npx vitest run tests/registry/override.test.ts
+```
+
+Proves both directions against the real fixture, not just the schema: the unmodified
+base artifact genuinely fails against tenant `b` (at exactly `enter-member-id`, where
+"Member ID" doesn't exist), proving the override is actually necessary rather than
+cosmetic -- and `artifacts/member-savings-balance@1.0.0+b.json`, the committed override,
+applied to that same base artifact, genuinely succeeds against tenant `b`, extracting the
+identical real balance the base artifact reads for tenant `a`.
 
 ## Layout
 
@@ -293,6 +389,9 @@ live final page to search, so `outputs` stays empty for that one.
   author declared a precheck worth the cost for that specific action
   (`tests/replay/idempotency.test.ts` proves a wholly separate later run for an
   already-ordered member stops there, which the idempotency probe alone never catches).
+  `approval.state` is checked first, before anything else: a non-`'approved'` artifact
+  is refused outright unless the caller passes `allowDraft`
+  (`tests/replay/approval.test.ts`).
 - `src/session/lease.ts` -- who controls the live session: `AUTOMATION ->
   PAUSED_PENDING_HUMAN -> HUMAN_CONTROL -> RESUMING -> AUTOMATION` (or `-> ABORTED` on
   timeout). A real, tested state machine; a separate operator process sharing it across
@@ -387,6 +486,16 @@ live final page to search, so `outputs` stays empty for that one.
   `idempotency`, checked once before the very first dispatch attempt of an irreversible
   step (never on retry). Absent by default -- an approved capability still acts
   unattended unless a step's own author declared one worth the cost.
+- `src/registry/catalog.ts` -- `listCapabilities`/`findCapability`/`invokeCapability`: the
+  agent-facing summary over the artifact schema, and a thin lookup in front of `replay()`
+  that inherits every safety property it already has for free. A malformed artifact file
+  is skipped with a reason, never a thrown exception.
+- `src/registry/override.ts` -- adapts a base artifact for a different tenant variant by
+  replacing whole steps by id (never a partial patch), then re-validates the result
+  through the same pipeline every artifact goes through. Refuses an override that
+  references a step id the base doesn't have, rather than silently ignoring it.
+- `src/cli/catalog.ts` -- the runnable entry point (`npm run catalog -- describe` /
+  `invoke --id ...`) for the catalog above.
 
 The artifact schema and deterministic replay are built and proven out before the
 LLM-driven agent, so the schema is designed on its own merits rather than shaped around

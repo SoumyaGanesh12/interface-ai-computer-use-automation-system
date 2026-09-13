@@ -26,6 +26,8 @@ export interface ReplayResult {
       | 'escalation_limit'
       | 'idempotency_ambiguous'
       | 'budget_exceeded'
+      /** The artifact is not approval.state: 'approved' and the caller did not explicitly opt in to running a draft anyway. */
+      | 'not_approved'
       | 'hard';
     stepId: string;
     intent: string;

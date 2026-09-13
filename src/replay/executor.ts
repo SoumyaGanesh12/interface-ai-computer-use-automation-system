@@ -3,6 +3,11 @@
  * outcomes at every re-entry, and recovery exhaustion never falls through to an
  * outcome match -- a stuck session-expiry must not be misreported as a business result.
  *
+ * A capability that is not approval.state: 'approved' is refused before anything is
+ * dispatched, unless the caller explicitly passes allowDraft -- the state a compiled
+ * capability starts in (see src/recorder/compile.ts) is a real gate, not a label nobody
+ * checks. This is the first thing checked, before the surface is even configured.
+ *
  * Irreversible steps: at-most-once, not exactly-once. A per-step in-memory `dispatched`
  * flag (this run only) means a checkpoint failure after dispatch never redispatches; it
  * consults the step's idempotency probe instead (navigating to `idempotency.navigateTo`
@@ -55,6 +60,8 @@ export interface ReplayDeps {
   operatorChannel: OperatorChannel;
   /** Default 15 minutes. A batch capability and a live call want different answers here. */
   escalationTimeoutMs?: number;
+  /** Explicit opt-in required to run a capability that isn't approval.state: 'approved'. Default false -- draft means nobody has reviewed this yet, so unattended execution isn't the default, it's a deliberate exception. */
+  allowDraft?: boolean;
 }
 
 /** Every step in a recovery sub-flow is risk: 'safe' (schema-enforced), so this never touches the dispatched-flag branch. */
@@ -82,6 +89,18 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
   let escalationCount = 0;
 
   writer.write({ kind: 'run_started', detail: artifact.capability.id, inputs, inputDeclarations: artifact.inputs });
+
+  // A draft has not been reviewed by anyone yet; unattended execution is the exception
+  // a caller opts into, not the default. Checked before anything else is dispatched.
+  if (artifact.approval.state !== 'approved' && !deps.allowDraft) {
+    return failure(
+      'not_approved',
+      'validate-approval',
+      'validate approval state',
+      'approval.state to be "approved", or the caller to pass allowDraft',
+      `approval.state is "${artifact.approval.state}"`,
+    );
+  }
 
   deps.surface.setPolicy(artifact.policy);
   deps.surface.setRunId(deps.runId);

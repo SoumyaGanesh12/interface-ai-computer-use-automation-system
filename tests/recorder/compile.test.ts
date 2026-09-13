@@ -91,6 +91,7 @@ describe('compileArtifact: member-savings-balance trace (all safe steps)', () =>
       runId: generateRunId(artifact.capability.id),
       lease: new RunLease(),
       operatorChannel: new ConsoleOperatorChannel(),
+      allowDraft: true,
     });
     expect(replayResult.status).toBe('success');
     expect(replayResult.outputs?.savingsBalance).toBe(1204.5);
@@ -127,6 +128,7 @@ describe('compileArtifact: member-savings-balance trace (all safe steps)', () =>
       runId: generateRunId(artifact.capability.id),
       lease: new RunLease(),
       operatorChannel: new ConsoleOperatorChannel(),
+      allowDraft: true,
     });
     expect(replayResult.status).toBe('success');
     expect(replayResult.outputs?.savingsBalance).toBe(58900);
@@ -253,6 +255,7 @@ describe('compileArtifact: a trace that wandered through intermediate pages befo
       runId: generateRunId(artifact.capability.id),
       lease: new RunLease(),
       operatorChannel: new ConsoleOperatorChannel(),
+      allowDraft: true,
     });
     expect(replayResult.status).toBe('success');
   }, 30000);
@@ -307,7 +310,7 @@ describe('compileArtifact: order-replacement-card trace (contains an irreversibl
 
     const lease = new RunLease();
     const runId = generateRunId(artifact.capability.id);
-    const promise = replay(artifact, { memberId: '41382' }, { surface, runId, lease, operatorChannel: new ConsoleOperatorChannel() });
+    const promise = replay(artifact, { memberId: '41382' }, { surface, runId, lease, operatorChannel: new ConsoleOperatorChannel(), allowDraft: true });
 
     await waitForLeaseState(lease, 'PAUSED_PENDING_HUMAN');
     // The "human" genuinely performs the real actions needed -- not a shortcut. The
