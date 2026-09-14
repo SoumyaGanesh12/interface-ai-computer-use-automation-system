@@ -193,7 +193,7 @@ function slugify(intent: string, index: number, used: Set<string>): string {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
-      .slice(0, 40) || `step-${index + 1}`;
+      .slice(0, 60) || `step-${index + 1}`;
   let candidate = base;
   let n = 2;
   while (used.has(candidate)) {

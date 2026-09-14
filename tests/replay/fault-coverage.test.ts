@@ -135,15 +135,34 @@ describe('fault coverage', () => {
     expect(Date.now() - started).toBeGreaterThanOrEqual(2900); // the fixture's own slow-fault delay is 3000ms
   }, 20000);
 
-  it('server_error: a real failure, not an exception', async () => {
+  it('server_error: an unanticipated condition fails safely, with full diagnostic detail, via no special-casing', async () => {
+    // This artifact declares no outcome and no recovery for server_error at all (or for
+    // anything else) -- baseArtifact defaults to outcomes: [] and recovery: []. Nothing
+    // in src/replay/executor.ts even mentions "server_error"; the only reason this comes
+    // back as a clean, diagnosable failure rather than an exception or a false success is
+    // the generic fallback every step goes through: no recovery matches, no outcome
+    // matches, the checkpoint never passes, the attempt budget exhausts, and the single
+    // shared failure() helper reports it. That's the actual claim under test -- not that
+    // server_error specifically is handled, but that *nothing declared* still fails safely.
     const artifact = baseArtifact('fault-server-error', [
       ...loginSteps(),
       setFaultStep('server_error'),
       { id: 'view-member', intent: 'View member 41382', kind: 'action', action: { kind: 'navigate', url: `${baseUrl}/member?id=41382` }, checkpoint: { kind: 'nodeExists', target: SAVINGS_TARGET }, risk: 'safe' },
     ]);
     const result = await replay(artifact, {}, { surface, runId: generateRunId(artifact.capability.id), lease: new RunLease(), operatorChannel: new ConsoleOperatorChannel() });
+
     expect(result.status).toBe('failure');
+    expect(result.status).not.toBe('business_outcome');
+    expect(result.status).not.toBe('success');
     expect(result.failure?.kind).toBe('checkpoint_failed');
+    // Full diagnostic detail: which step, what it expected, what actually happened.
+    expect(result.failure?.stepId).toBe('view-member');
+    expect(result.failure?.intent).toBe('View member 41382');
+    expect(result.failure?.expected).toMatch(/checkpoint/i);
+    expect(result.failure?.observed).toMatch(/attempt budget/i);
+    // A real screenshot, not a placeholder -- proves evidenceRef() actually captured something.
+    expect(result.failure?.evidenceRef).toBeTruthy();
+    expect(result.failure?.evidenceRef).toMatch(/\.png$/);
   }, 20000);
 
   it('dialog: a declared recovery dismisses the interstitial and the run completes', async () => {

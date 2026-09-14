@@ -1,0 +1,197 @@
+{
+  "runId": "discovery-1789424757884-9rshr8",
+  "goal": "Find member 41382 and report their savings balance.",
+  "target": "http://localhost:4400",
+  "model": "gemini-3.5-flash-lite",
+  "startedAt": "2026-09-14T22:25:58.187Z",
+  "finishedAt": "2026-09-14T22:26:02.392Z",
+  "status": "done",
+  "outputs": {
+    "savings_balance": "$1204.50"
+  },
+  "totalTokens": 4439,
+  "steps": [
+    {
+      "stepIndex": 0,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "open the login page",
+      "action": {
+        "kind": "navigate",
+        "url": "http://localhost:4400/login"
+      },
+      "observationHash": "e3b0c44298fc1c14",
+      "result": "ok"
+    },
+    {
+      "stepIndex": 1,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "enter the operator username",
+      "action": {
+        "kind": "type",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "Real <label for> on this field.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "textbox",
+                "name": "Username"
+              }
+            }
+          ]
+        },
+        "text": "svc.operator"
+      },
+      "observationHash": "5f82c5b0bd4efaad",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 2,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "enter the operator password",
+      "action": {
+        "kind": "typeCredential",
+        "target": {
+          "recordedTier": 2,
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.8,
+              "note": "No label -- only the adjacent 'Password' cell.",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Password",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ]
+        },
+        "credentialRef": "FIXTURE_OPERATOR_PASSWORD"
+      },
+      "observationHash": "172b3f6c2429f964",
+      "result": "ok",
+      "resolvedTier": 2
+    },
+    {
+      "stepIndex": 3,
+      "source": "preflight",
+      "rationale": "(preflight)",
+      "intent": "submit the login form",
+      "action": {
+        "kind": "click",
+        "target": {
+          "recordedTier": 1,
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.95,
+              "note": "A real <button>.",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "button",
+                "name": "Log In"
+              }
+            }
+          ]
+        }
+      },
+      "observationHash": "aa2a59884ed7ae37",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 4,
+      "source": "model",
+      "rationale": "To find member 41382 and report their savings balance, I need to enter the member ID into the search input field.",
+      "intent": "Type member ID 41382 into the search box",
+      "action": {
+        "kind": "type",
+        "target": {
+          "candidates": [
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "textbox"
+              }
+            }
+          ],
+          "recordedTier": 2
+        },
+        "text": "41382"
+      },
+      "observationHash": "99ff9f0b7e1d7749",
+      "result": "ok",
+      "resolvedTier": 2
+    },
+    {
+      "stepIndex": 5,
+      "source": "model",
+      "rationale": "I have typed the member ID into the search box, but I still need to submit the search to find member 41382 and view their savings balance.",
+      "intent": "Click the Search button to submit the query",
+      "action": {
+        "kind": "click",
+        "target": {
+          "candidates": [
+            {
+              "tier": 1,
+              "confidence": 0.9,
+              "note": "Unique cell named \"Search\".",
+              "locator": {
+                "strategy": "roleAndName",
+                "role": "cell",
+                "name": "Search"
+              }
+            },
+            {
+              "tier": 2,
+              "confidence": 0.7,
+              "note": "No name of its own -- identified by nearby text \"Member ID\".",
+              "locator": {
+                "strategy": "labelProximity",
+                "labelText": "Member ID",
+                "direction": "right",
+                "role": "cell"
+              }
+            },
+            {
+              "tier": 3,
+              "confidence": 0.5,
+              "note": "Falls back to matching visible text \"Search\".",
+              "locator": {
+                "strategy": "visibleText",
+                "text": "Search",
+                "role": "cell"
+              }
+            }
+          ],
+          "recordedTier": 1
+        }
+      },
+      "observationHash": "424a97c3f9da0da7",
+      "result": "ok",
+      "resolvedTier": 1
+    },
+    {
+      "stepIndex": 6,
+      "source": "model",
+      "rationale": "The search for member 41382 is complete, and the savings balance ($1204.50) is visible on the page.",
+      "intent": "Report the savings balance of member 41382",
+      "observationHash": "595cde5933aa8718",
+      "result": "ok",
+      "detail": "goal reported complete"
+    }
+  ]
+}

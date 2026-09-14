@@ -102,8 +102,13 @@ All three are real, not assumed.
 
 **Every named runtime condition is proven, not just handled in theory:** a
 validation error, "record not found," a permission denial, an unexpected
-dialog, a session timeout, a slow load, and an outright server error, each
-against a real `replay()` call hitting a real instance of that condition.
+dialog, and a session timeout are each proven against a real `replay()` call
+hitting a real instance of that condition. A server error is deliberately left
+undeclared on the same test artifact, proving the other half of the claim:
+a condition nothing declares still comes back as a specific, diagnosable
+failure, not a silent misclassification or a crash, because every failure
+path in the executor funnels through one shared reporting function rather
+than per-condition special-casing.
 
 **One genuine correctness bug surfaced directly from testing, not a code review.** A `Surface` can be reused across sequential runs for efficiency, and
 outcomes/recovery were being evaluated against a new run's very first

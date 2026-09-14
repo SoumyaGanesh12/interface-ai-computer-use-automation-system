@@ -33,7 +33,7 @@
       "name": "savingsBalance",
       "type": "currency",
       "nullable": false,
-      "afterStep": "click-the-search-button-to-view-member-4",
+      "afterStep": "click-the-search-button-to-submit-the-query",
       "extraction": {
         "target": {
           "candidates": [
@@ -75,7 +75,7 @@
         "transform": "currency"
       },
       "description": "Recorded from discovery: \"$1204.50\".",
-      "redact": true
+      "redact": false
     }
   ],
   "steps": [
@@ -304,8 +304,8 @@
       "risk": "safe"
     },
     {
-      "id": "click-the-search-button-to-view-member-4",
-      "intent": "Click the Search button to view member 41382 details",
+      "id": "click-the-search-button-to-submit-the-query",
+      "intent": "Click the Search button to submit the query",
       "kind": "action",
       "action": {
         "kind": "click",
@@ -368,9 +368,9 @@
     ]
   },
   "provenance": {
-    "discoveredAt": "2026-09-13T17:41:36.565Z",
+    "discoveredAt": "2026-09-14T22:25:58.187Z",
     "model": "gemini-3.5-flash-lite",
-    "runId": "discovery-1789321296338",
+    "runId": "discovery-1789424757884-9rshr8",
     "humanAssisted": false
   }
 }

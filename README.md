@@ -153,6 +153,18 @@ GET /_control/reset
 npx tsx --env-file=.env src/cli/replay.ts --artifact "artifacts/member-savings-balance@1.0.0.json" --input memberId=41382 --headless
 ```
 
+Now the same capability against a member that doesn't exist:
+
+```bash
+npx tsx --env-file=.env src/cli/replay.ts --artifact "artifacts/member-savings-balance@1.0.0.json" --input memberId=99999 --headless
+```
+
+This returns `status: business_outcome`, `member_not_found` - a clean, named result, not a
+crash or a generic failure. The declared `outcomes` entry on this artifact is what makes
+the difference: it's checked on every step, independent of whether that step's own
+checkpoint passes, so a legitimate business result is never mistaken for the automation
+being stuck.
+
 **3. Watch the LLM discover a flow from a goal, live**
 
 ```bash
