@@ -156,12 +156,18 @@ npx tsx --env-file=.env src/cli/replay.ts --artifact "artifacts/member-savings-b
 **3. Watch the LLM discover a flow from a goal, live**
 
 ```bash
-npx tsx --env-file=.env src/cli/discover.ts --goal "Find member 41382 and report their savings balance." --headless
+npx tsx --env-file=.env src/cli/discover.ts --goal "Find member 41382 and report their savings balance." --headless --record --capability-id my-balance-lookup --capability-name "My Balance Lookup" --overwrite
 ```
 
 Prints each step as it happens, writes a full trace to `traces/<runId>.json`, and real
-evidence to `evidence/<runId>/`. Add `--record` to compile the successful run straight
-into a draft artifact in the same command.
+evidence to `evidence/<runId>/`. `--record` compiles the successful run straight into a
+draft artifact in the same command, writing `artifacts/my-balance-lookup@1.0.0.json`.
+
+This coexists with the separate, hand-written `member-savings-balance@1.0.0.json` used
+in step 2, deliberately, not by accident: that one is what most of the test suite
+targets, so it stays stable; this one is genuinely produced by a live run compiled
+through the real pipeline, kept as unedited proof that discover -> compile actually
+works on real output, not just on the curated example.
 
 **4. Watch a live human takeover, triggered for real**
 
