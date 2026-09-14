@@ -42,6 +42,7 @@ import { evaluate } from '../matcher/evaluate';
 import type { Matcher } from '../matcher/types';
 import { extract } from '../matcher/extraction';
 import { createEvidenceWriter } from '../evidence/writer';
+import { intersectAllowlist, type Allowlist } from '../policy/allowlist';
 import type { RunLease, InterventionRequest } from '../session/lease';
 import type { OperatorChannel } from '../session/operator-channel';
 import type { Surface } from '../surface/surface';
@@ -62,6 +63,14 @@ export interface ReplayDeps {
   escalationTimeoutMs?: number;
   /** Explicit opt-in required to run a capability that isn't approval.state: 'approved'. Default false -- draft means nobody has reviewed this yet, so unattended execution isn't the default, it's a deliberate exception. */
   allowDraft?: boolean;
+  /**
+   * The deployment's own ceiling on what any capability may touch, regardless of what an
+   * artifact declares for itself. The policy actually enforced is intersectAllowlist(this,
+   * artifact.policy) -- an artifact can narrow, never widen. Omitted means no deployment
+   * ceiling is configured, so the artifact's own policy is enforced as-is (the pre-existing
+   * behavior); a real deployment should always supply one.
+   */
+  deploymentAllowlist?: Allowlist;
 }
 
 /** Every step in a recovery sub-flow is risk: 'safe' (schema-enforced), so this never touches the dispatched-flag branch. */
@@ -102,7 +111,8 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
     );
   }
 
-  deps.surface.setPolicy(artifact.policy);
+  const effectivePolicy = deps.deploymentAllowlist ? intersectAllowlist(deps.deploymentAllowlist, artifact.policy) : artifact.policy;
+  deps.surface.setPolicy(effectivePolicy);
   deps.surface.setRunId(deps.runId);
 
   function base() {
@@ -120,7 +130,7 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
 
   /** The one exit point. Every return in this function goes through here, so a run can never finish unlogged. */
   function finish(result: ReplayResult): ReplayResult {
-    writer.write({ kind: 'run_finished', detail: result.status, result });
+    writer.write({ kind: 'run_finished', detail: result.status, result, outputDeclarations: artifact.outputs.map((o) => ({ name: o.name, redact: o.redact })) });
     return result;
   }
 
@@ -164,6 +174,7 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
       intent: step.intent,
       reason,
       raisedAt: new Date().toISOString(),
+      evidenceRef: await evidenceRef(),
     };
     const raisedAt = Date.now();
     writer.write({ kind: 'escalation_raised', stepId: step.id, detail: reason });
@@ -200,6 +211,13 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
   }
 
   let lastObservation: Observation | undefined;
+  // A Surface can legitimately be reused to run several artifacts in sequence (see
+  // Surface.setRunId's own doc comment) -- so the very first observation of a brand new
+  // run may be showing whatever a *previous* run left on the page, not anything this run
+  // did. Recovery/outcomes must not be evaluated against that leftover state before this
+  // run has dispatched at least one action of its own; a stale "already ordered" or
+  // "not found" notice from the prior run must never be mistaken for this run's result.
+  let hasActedThisRun = false;
 
   for (const step of artifact.steps) {
     let attempts = 0;
@@ -214,39 +232,41 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
       const observation = await deps.surface.observe();
       lastObservation = observation;
 
-      // Recovery before outcomes, declaration order, at every re-entry.
-      let retryFromTop = false;
-      for (const r of artifact.recovery) {
-        if (!evaluate(r.detect, observation).satisfied) continue;
-        const used = recoveryAttempts.get(r.code) ?? 0;
-        if (used >= r.maxAttempts) {
-          // A human unblocking whatever recovery couldn't handle, not completing this
-          // step itself -- no `verify`, so the outer loop re-runs the ordinary step
-          // logic from the top on resume, rather than re-checking this step's own
-          // checkpoint here.
-          const outcome = await escalate(step, `recovery "${r.code}" exhausted after ${r.maxAttempts} attempt(s): detector still matches`);
-          if (outcome !== 'resumed') return outcome;
+      if (hasActedThisRun) {
+        // Recovery before outcomes, declaration order, at every re-entry.
+        let retryFromTop = false;
+        for (const r of artifact.recovery) {
+          if (!evaluate(r.detect, observation).satisfied) continue;
+          const used = recoveryAttempts.get(r.code) ?? 0;
+          if (used >= r.maxAttempts) {
+            // A human unblocking whatever recovery couldn't handle, not completing this
+            // step itself -- no `verify`, so the outer loop re-runs the ordinary step
+            // logic from the top on resume, rather than re-checking this step's own
+            // checkpoint here.
+            const outcome = await escalate(step, `recovery "${r.code}" exhausted after ${r.maxAttempts} attempt(s): detector still matches`);
+            if (outcome !== 'resumed') return outcome;
+            retryFromTop = true;
+            break;
+          }
+          recoveryAttempts.set(r.code, used + 1);
+
+          if (r.strategy.kind === 'preflight') {
+            return failure('hard', step.id, step.intent, 'a configured preflight to run', 'preflight recovery requires app config that does not exist yet');
+          }
+          const outcome = await runRecoverySteps(r.strategy.steps, deps.surface);
+          recoveries.push({ code: r.code, attempts: used + 1 });
+          writer.write({ kind: 'recovery_attempted', stepId: step.id, detail: `${r.code}: ${outcome.ok ? 'succeeded' : outcome.detail}` });
+          if (!outcome.ok) return failure('hard', step.id, step.intent, 'recovery sub-flow to succeed', outcome.detail);
           retryFromTop = true;
           break;
         }
-        recoveryAttempts.set(r.code, used + 1);
+        if (retryFromTop) continue; // re-observe and re-check from the top
 
-        if (r.strategy.kind === 'preflight') {
-          return failure('hard', step.id, step.intent, 'a configured preflight to run', 'preflight recovery requires app config that does not exist yet');
-        }
-        const outcome = await runRecoverySteps(r.strategy.steps, deps.surface);
-        recoveries.push({ code: r.code, attempts: used + 1 });
-        writer.write({ kind: 'recovery_attempted', stepId: step.id, detail: `${r.code}: ${outcome.ok ? 'succeeded' : outcome.detail}` });
-        if (!outcome.ok) return failure('hard', step.id, step.intent, 'recovery sub-flow to succeed', outcome.detail);
-        retryFromTop = true;
-        break;
-      }
-      if (retryFromTop) continue; // re-observe and re-check from the top
-
-      // Outcomes, declaration order.
-      for (const o of artifact.outcomes) {
-        if (evaluate(o.detect, observation).satisfied) {
-          return finish({ status: 'business_outcome', ...base(), outcome: { code: o.code, message: o.message } });
+        // Outcomes, declaration order.
+        for (const o of artifact.outcomes) {
+          if (evaluate(o.detect, observation).satisfied) {
+            return finish({ status: 'business_outcome', ...base(), outcome: { code: o.code, message: o.message } });
+          }
         }
       }
 
@@ -254,6 +274,7 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
         // A human-performed segment recorded during discovery: verify against this
         // step's own checkpoint on resume, since the whole point is confirming the
         // human actually completed it.
+        hasActedThisRun = true;
         const outcome = await escalate(step, step.escalateReason ?? 'escalate step', step.checkpoint);
         if (outcome !== 'resumed') return outcome;
         break; // the human completed this step; move to the next one.
@@ -325,6 +346,7 @@ export async function replay(artifact: Artifact, inputs: Readonly<Record<string,
         const kind = actResult.reason === 'ambiguous' ? 'locator_ambiguous' : actResult.reason === 'policy_denied' ? 'policy_denied' : 'locator_unresolved';
         return failure(kind, step.id, step.intent, 'action to dispatch cleanly', `${actResult.reason}: ${actResult.detail}`);
       }
+      hasActedThisRun = true;
 
       if (actResult.resolvedTier !== undefined && 'target' in rawAction) {
         const recordedTier: Tier = rawAction.target.recordedTier;

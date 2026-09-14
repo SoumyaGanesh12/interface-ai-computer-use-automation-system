@@ -21,6 +21,8 @@ export interface InterventionRequest {
   intent: string;
   reason: string;
   raisedAt: string;
+  /** Screenshot path from Surface.capture(), best-effort -- the operator's view of the state that triggered this. */
+  evidenceRef: string;
 }
 
 export type HandoffOutcome = 'resumed' | 'timeout';

@@ -308,6 +308,7 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
       ];
       if (existingOutcomeWarning) reasonParts.push(`WARNING -- the current page already shows: "${existingOutcomeWarning}"`);
 
+      const evidenceRef = await opts.surface.capture().then((ref) => ref.screenshotPath).catch(() => '');
       const request: InterventionRequest = {
         runId: opts.runId,
         capability: opts.goal,
@@ -315,6 +316,7 @@ export async function discover(opts: DiscoverOptions): Promise<DiscoveryResult> 
         intent: decision.intent,
         reason: reasonParts.join('\n  '),
         raisedAt: new Date().toISOString(),
+        evidenceRef,
       };
       writer.write({ kind: 'escalation_raised', detail: request.reason });
       await opts.surface.beginHumanActionRecording().catch(() => {});

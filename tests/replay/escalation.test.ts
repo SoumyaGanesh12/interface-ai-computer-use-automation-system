@@ -6,6 +6,7 @@
  */
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
+import { existsSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { app } from '../../fixture/app';
 import { replay, type ReplayDeps } from '../../src/replay/executor';
@@ -88,7 +89,11 @@ describe('executor escalation', () => {
     const promise = replay(artifact, {}, deps);
 
     await waitForLeaseState(lease, 'PAUSED_PENDING_HUMAN');
-    expect(lease.getIntervention()?.stepId).toBe('human-step');
+    const intervention = lease.getIntervention();
+    expect(intervention?.stepId).toBe('human-step');
+    // The operator gets a real screenshot of the state that triggered this, not just text.
+    expect(intervention?.evidenceRef).toBeTruthy();
+    expect(existsSync(intervention!.evidenceRef)).toBe(true);
 
     lease.takeControl();
     lease.releaseControl();

@@ -11,8 +11,9 @@ export interface OperatorChannel {
 
 export class ConsoleOperatorChannel implements OperatorChannel {
   async notify(request: InterventionRequest): Promise<void> {
+    const evidenceLine = request.evidenceRef ? `\n  state: ${request.evidenceRef}` : '';
     console.log(
-      `\n[intervention needed] run=${request.runId} capability=${request.capability} step=${request.stepId}\n  intent: ${request.intent}\n  reason: ${request.reason}\n`,
+      `\n[intervention needed] run=${request.runId} capability=${request.capability} step=${request.stepId}\n  intent: ${request.intent}\n  reason: ${request.reason}${evidenceLine}\n`,
     );
   }
 }

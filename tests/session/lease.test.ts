@@ -9,6 +9,7 @@ function request(overrides: Partial<Parameters<RunLease['requestHandoff']>[0]> =
     intent: 'do a thing',
     reason: 'stuck',
     raisedAt: new Date().toISOString(),
+    evidenceRef: '',
     ...overrides,
   };
 }

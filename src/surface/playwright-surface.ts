@@ -36,6 +36,7 @@ export async function createPlaywrightWebSurface(opts: PlaywrightSurfaceOptions)
   await cdp.send('Page.enable');
 
   let seq = 0;
+  let captureSeq = 0;
   let policy = opts.policy;
   let runId = opts.runId;
   const credentials = opts.credentials ?? new EnvCredentialProvider();
@@ -62,11 +63,13 @@ export async function createPlaywrightWebSurface(opts: PlaywrightSurfaceOptions)
     async capture(): Promise<EvidenceRef> {
       const dir = opts.evidenceDir ?? runEvidenceDir(runId);
       await mkdir(dir, { recursive: true });
-      // Fixed names, not timestamped: today a run captures at most once (its terminal
-      // failure). This will need a per-capture suffix once escalation can also
-      // capture mid-run -- more than one capture per run would silently overwrite.
-      const screenshotPath = path.join(dir, 'screenshot.png');
-      const domSnapshotPath = path.join(dir, 'snapshot.html');
+      // Suffixed by call order within this run -- a run can capture more than once
+      // (an escalation mid-run, then a later terminal failure), and each must land at
+      // its own path rather than silently overwriting the previous capture.
+      const suffix = captureSeq === 0 ? '' : `-${captureSeq}`;
+      captureSeq++;
+      const screenshotPath = path.join(dir, `screenshot${suffix}.png`);
+      const domSnapshotPath = path.join(dir, `snapshot${suffix}.html`);
       await page.screenshot({ path: screenshotPath });
       await writeFile(domSnapshotPath, await page.content(), 'utf-8');
       return { runId, screenshotPath, domSnapshotPath, capturedAt: new Date().toISOString() };
