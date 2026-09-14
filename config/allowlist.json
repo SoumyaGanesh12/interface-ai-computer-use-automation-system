@@ -1,0 +1,4 @@
+{
+  "allowedOrigins": ["http://localhost:4400"],
+  "allowedActions": ["navigate", "click", "type", "typeCredential", "select", "read"]
+}

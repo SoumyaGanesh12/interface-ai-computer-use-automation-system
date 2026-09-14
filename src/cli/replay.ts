@@ -11,6 +11,7 @@ import { createPlaywrightWebSurface } from '../surface/playwright-surface';
 import { generateRunId } from '../evidence/run-id';
 import { RunLease } from '../session/lease';
 import { ConsoleOperatorChannel } from '../session/operator-channel';
+import { loadDeploymentAllowlist } from '../policy/deployment-config';
 import { watchForHumanTakeover } from './human-takeover';
 
 const program = new Command();
@@ -22,6 +23,7 @@ program
   .option('--headless', 'run Chromium headless instead of headed', false)
   .option('--escalation-timeout-ms <n>', 'how long to wait for a human before an escalated step times out', (v) => Number(v))
   .option('--allow-draft', 'run a capability whose approval.state is not "approved" (refused by default)', false)
+  .option('--deployment-config <path>', 'the deployment allowlist an artifact\'s own policy is intersected against', 'config/allowlist.json')
   .parse(process.argv);
 
 const opts = program.opts<{
@@ -30,6 +32,7 @@ const opts = program.opts<{
   headless: boolean;
   escalationTimeoutMs?: number;
   allowDraft: boolean;
+  deploymentConfig: string;
 }>();
 
 function parseInputs(pairs: string[]): Record<string, string> {
@@ -52,6 +55,15 @@ async function main(): Promise<void> {
   }
   const artifact = validated.artifact;
 
+  let deploymentAllowlist;
+  try {
+    deploymentAllowlist = loadDeploymentAllowlist(opts.deploymentConfig);
+  } catch (err) {
+    console.error(`could not load deployment allowlist from "${opts.deploymentConfig}": ${(err as Error).message}`);
+    process.exitCode = 1;
+    return;
+  }
+
   const surface = await createPlaywrightWebSurface({ runId: 'replay-cli', policy: artifact.policy, headless: opts.headless });
   const lease = new RunLease();
   const runId = generateRunId(artifact.capability.id);
@@ -71,6 +83,7 @@ async function main(): Promise<void> {
       operatorChannel: new ConsoleOperatorChannel(),
       escalationTimeoutMs: opts.escalationTimeoutMs,
       allowDraft: opts.allowDraft,
+      deploymentAllowlist,
     });
 
     console.log(`\nstatus: ${result.status}`);
