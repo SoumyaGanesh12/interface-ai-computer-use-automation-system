@@ -37,16 +37,18 @@ discover  →  compile  →  replay (no model)  →  escalate on demand
 ## Architecture
 
 ```
-┌────────────┐   trace    ┌──────────┐  artifact  ┌──────────┐
-│ agent/      │ ────────▶ │ recorder/ │ ─────────▶ │ replay/   │ ──▶ result
-│ (LLM loop)  │            │ (compile) │            │ (executor)│
-└────────────┘            └──────────┘            └──────────┘
-       │                                                  │
-       └──────────────────┬───────────────────────────────┘
-                           ▼
-                     surface/ (Playwright + CDP)
-                     the only place a real browser is touched
+agent/ (LLM loop)     --  produces a trace  -->  recorder/ (compile)
+                                                          |
+                                                  produces an artifact
+                                                          v
+                                                  replay/ (executor)  --> result
+
+Both agent/ and replay/ drive the same surface/ (Playwright + CDP) --
+the only place a real browser is touched.
 ```
+
+See `ARCHITECTURE.md` for the full system diagram and the design reasoning behind
+every piece of it.
 
 - **`surface/`** is the one seam between "perceive/act on a UI" and everything above
   it. Discovery and replay both consume the same normalized `Observation` shape; a
@@ -70,7 +72,7 @@ discover  →  compile  →  replay (no model)  →  escalate on demand
 
 ## Tech stack
 
-| | |
+| Component | Technology |
 |---|---|
 | Runtime | Node 22, TypeScript (strict) |
 | Browser automation | Playwright + Chrome DevTools Protocol |
@@ -217,7 +219,6 @@ fixture instance — mocked only where a clean seam is the right call rather tha
 rest of the surrounding system (the console-based operator channel standing in for a
 real operator UI, most notably).
 
-## Further reading
+## Author
 
-`REPORT.md` covers the architecture rationale, the artifact schema's design, and the
-deliberate cuts and known limitations in more depth than a README should carry.
+Soumya Ganesh ([ganesh.so@northeastern.edu](mailto:ganesh.so@northeastern.edu))

@@ -8,29 +8,25 @@ current design already extends cleanly versus where it would need real new work.
 ## 1. System overview
 
 ```
-                 goal (plain language)
-                        │
-                        ▼
-                 ┌─────────────┐        trace          ┌──────────────┐
-                 │   agent/     │ ─────────────────────▶│  recorder/    │
-                 │ (LLM loop)   │  observe → decide →    │  (compile)    │
-                 └─────────────┘  act, until done/stuck  └──────────────┘
-                        │                                       │
-                        │ act()                       artifact (versioned,
-                        │ observe()                    typed, reviewable)
-                        ▼                                       │
-                 ┌─────────────────────┐                        ▼
-                 │      surface/        │◀──────────────┌──────────────┐
-                 │ (Playwright + CDP)   │   act()/       │   replay/     │
-                 │ the only real-browser│   observe()    │  (executor)   │
-                 │ seam in the system   │                │  no model     │
-                 └─────────────────────┘                └──────────────┘
-                                                                 │
-                                                   success / business_outcome /
-                                                        failure, or escalate
-                                                                 │
-                                                                 ▼
-                                                    session/ (human takeover)
+goal (plain language)
+        |
+        v
+agent/ (LLM loop)          observe -> decide -> act, until done or stuck
+        |
+        | produces a trace
+        v
+recorder/ (compile)        re-runs the trace's already-decided actions once more,
+        |                  deriving each checkpoint from what actually happens
+        | produces an artifact (versioned, typed, reviewable)
+        v
+replay/ (executor)         no model anywhere in this path
+        |
+        | success / business_outcome / failure -- or an escalation
+        v
+session/ (human takeover)
+
+Both agent/ and replay/ drive the same surface/ (Playwright + CDP) --
+the only place a real browser is touched in the entire system.
 ```
 
 Two things are true about this diagram that are enforced, not just drawn this way:
