@@ -38,7 +38,8 @@
         "source": "text",
         "transform": "currency"
       },
-      "description": "The member's current savings account balance."
+      "description": "The member's current savings account balance.",
+      "redact": true
     }
   ],
   "steps": [

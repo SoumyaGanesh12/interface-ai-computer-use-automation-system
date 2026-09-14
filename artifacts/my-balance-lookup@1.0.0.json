@@ -74,7 +74,8 @@
         "source": "text",
         "transform": "currency"
       },
-      "description": "Recorded from discovery: \"$1204.50\"."
+      "description": "Recorded from discovery: \"$1204.50\".",
+      "redact": true
     }
   ],
   "steps": [

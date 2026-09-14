@@ -56,6 +56,8 @@ export const ArtifactSchema = z
         afterStep: z.string().min(1),
         extraction: ExtractionSchema,
         description: z.string().min(1),
+        /** Whether this value must be masked before it reaches a durable log -- the caller still gets it back in full. */
+        redact: z.boolean(),
       }),
     ),
     steps: z.array(StepSchema).min(1),

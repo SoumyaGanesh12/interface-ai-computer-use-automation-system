@@ -22,3 +22,13 @@ export function redactInputs(inputs: Readonly<Record<string, string>>, declarati
   }
   return out;
 }
+
+/** Same masking rule as redactInputs, applied to a run's extracted outputs before they reach a durable log -- the value returned to the caller is never touched, only what gets persisted. */
+export function redactOutputs(outputs: Readonly<Record<string, unknown>>, declarations: readonly InputDeclaration[]): Record<string, unknown> {
+  const redactedNames = new Set(declarations.filter((d) => d.redact).map((d) => d.name));
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(outputs)) {
+    out[key] = redactedNames.has(key) ? PLACEHOLDER : value;
+  }
+  return out;
+}

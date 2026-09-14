@@ -17,7 +17,7 @@
  */
 import { appendFileSync, closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, writeSync } from 'node:fs';
 import path from 'node:path';
-import { redactInputs, type InputDeclaration } from '../policy/redact';
+import { redactInputs, redactOutputs, type InputDeclaration } from '../policy/redact';
 import { runEvidenceDir } from './paths';
 
 export type RunEventKind =
@@ -36,7 +36,9 @@ export interface RunEventInput {
   /** Redacted internally against `inputDeclarations` before this ever reaches disk. */
   inputs?: Record<string, string>;
   inputDeclarations?: InputDeclaration[];
+  /** A ReplayResult, if this event carries one. Its `outputs` (when present) are redacted internally against `outputDeclarations` before this ever reaches disk -- the value returned to the caller is a separate, untouched object. */
   result?: unknown;
+  outputDeclarations?: InputDeclaration[];
 }
 
 export interface JournalEntry {
@@ -59,6 +61,10 @@ function appendDurable(filePath: string, data: string): void {
   } finally {
     closeSync(fd);
   }
+}
+
+function isResultWithOutputs(result: unknown): result is { outputs: Record<string, unknown> } & Record<string, unknown> {
+  return typeof result === 'object' && result !== null && 'outputs' in result && typeof (result as { outputs: unknown }).outputs === 'object' && (result as { outputs: unknown }).outputs !== null;
 }
 
 function alreadyFinished(eventsPath: string): boolean {
@@ -89,13 +95,17 @@ export function createEvidenceWriter(runId: string, evidenceRoot = 'evidence', a
 
   return {
     write(event) {
-      const { inputs, inputDeclarations, ...rest } = event;
+      const { inputs, inputDeclarations, outputDeclarations, result, ...rest } = event;
+      const redactedResult = isResultWithOutputs(result) && outputDeclarations
+        ? { ...result, outputs: redactOutputs(result.outputs, outputDeclarations) }
+        : result;
       const line =
         JSON.stringify({
           runId,
           seq: seq++,
           timestamp: new Date().toISOString(),
           ...rest,
+          ...(result !== undefined ? { result: redactedResult } : {}),
           ...(inputs ? { inputs: inputDeclarations ? redactInputs(inputs, inputDeclarations) : inputs } : {}),
         }) + '\n';
       appendFileSync(evidencePath, line, 'utf-8');

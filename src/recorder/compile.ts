@@ -262,7 +262,7 @@ function inferOutput(name: string, value: string, observation: Observation, afte
     extraction = { target, source, transform: 'regexCapture', pattern: toPattern(value) };
   }
 
-  return { ok: true, output: { name: toParamName(name), type, nullable: false, afterStep, extraction, description: `Recorded from discovery: "${value}".` } };
+  return { ok: true, output: { name: toParamName(name), type, nullable: false, afterStep, extraction, description: `Recorded from discovery: "${value}".`, redact: false } };
 }
 
 export async function compileArtifact(trace: TraceFile, opts: CompileOptions): Promise<CompileResult> {
