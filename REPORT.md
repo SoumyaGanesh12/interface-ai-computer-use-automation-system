@@ -199,8 +199,14 @@ exactly one place, inside the surface adapter.
 
 **Unattended execution is an opt-in, not a default.** A freshly compiled
 capability starts as a draft and is refused for unattended replay unless a
-human explicitly promotes it, since confirmation should happen once, by a
-human reviewing the whole artifact, rather than per call.
+human explicitly promotes it. This is the chosen answer to handling
+irreversible actions conservatively: the human decision happens once, when
+an artifact is reviewed and approved, rather than blocking or confirming on
+every dispatch. Discovery still escalates live on a proposed irreversible
+action, since nothing has been reviewed yet; replay of an already-approved
+artifact only escalates if something about that specific dispatch turns
+ambiguous, such as a failed checkpoint or a redispatch with no idempotency
+probe declared.
 
 **Three limitations are named honestly rather than left for a reviewer to find.** The allowlist checks origin, not path (see Cuts). There is no
 per-tenant rate limiting; no shared mutable state between runs means this
@@ -210,14 +216,14 @@ against a synthetic fixture but a real gap against actual regulated data.
 
 ## Cuts
 
-**Multi-tenant.**
+**Multi-tenant:**
 
 - Override can insert only by replacement, not addition, so a genuinely new
   step can't be expressed.
 - No automatic tenant-to-variant resolution; applying the right override for
   a calling tenant is manual today.
 
-**Safety and scale.**
+**Safety and scale:**
 
 - Allowlist has no route/path granularity, only origin, though the
   deployment-config intersection itself is real and enforced.
@@ -226,7 +232,7 @@ against a synthetic fixture but a real gap against actual regulated data.
 - The model provider is a public, free-tier API, fine for a synthetic
   fixture, not for real regulated data without a zero-retention tier.
 
-**Schema and process.**
+**Schema and process:**
 
 - `recovery`'s `preflight` kind is declared but not wired up; only `runSteps`
   is functional.
