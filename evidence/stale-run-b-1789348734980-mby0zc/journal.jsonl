@@ -1,0 +1,2 @@
+{"runId":"stale-run-b-1789348734980-mby0zc","seq":0,"timestamp":"2026-09-14T01:18:55.102Z","stepId":"open-login","status":"dispatched"}
+{"runId":"stale-run-b-1789348734980-mby0zc","seq":1,"timestamp":"2026-09-14T01:18:55.321Z","stepId":"open-login","status":"confirmed"}

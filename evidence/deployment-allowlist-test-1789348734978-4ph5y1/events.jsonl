@@ -1,0 +1,6 @@
+{"runId":"deployment-allowlist-test-1789348734978-4ph5y1","seq":0,"timestamp":"2026-09-14T01:18:54.979Z","kind":"run_started","detail":"deployment-allowlist-test","inputs":{}}
+{"runId":"deployment-allowlist-test-1789348734978-4ph5y1","seq":1,"timestamp":"2026-09-14T01:18:55.419Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"deployment-allowlist-test-1789348734978-4ph5y1","seq":2,"timestamp":"2026-09-14T01:18:55.910Z","kind":"step_succeeded","stepId":"enter-username"}
+{"runId":"deployment-allowlist-test-1789348734978-4ph5y1","seq":3,"timestamp":"2026-09-14T01:18:56.597Z","kind":"step_succeeded","stepId":"enter-password"}
+{"runId":"deployment-allowlist-test-1789348734978-4ph5y1","seq":4,"timestamp":"2026-09-14T01:18:57.182Z","kind":"step_succeeded","stepId":"submit-login"}
+{"runId":"deployment-allowlist-test-1789348734978-4ph5y1","seq":5,"timestamp":"2026-09-14T01:18:57.187Z","kind":"run_finished","detail":"success","result":{"status":"success","capability":"deployment-allowlist-test","version":"1.0.0","runId":"deployment-allowlist-test-1789348734978-4ph5y1","durationMs":2209,"locatorTiers":[{"stepId":"enter-username","recordedTier":1,"resolvedTier":1},{"stepId":"enter-password","recordedTier":2,"resolvedTier":2},{"stepId":"submit-login","recordedTier":1,"resolvedTier":1}],"recoveries":[],"drift":[],"humanInterventions":[],"outputs":{}}}

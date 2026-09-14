@@ -1,0 +1,12 @@
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":0,"timestamp":"2026-09-14T01:19:11.214Z","stepId":"open-login","status":"dispatched"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":1,"timestamp":"2026-09-14T01:19:11.810Z","stepId":"open-login","status":"confirmed"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":2,"timestamp":"2026-09-14T01:19:12.035Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":3,"timestamp":"2026-09-14T01:19:12.925Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":4,"timestamp":"2026-09-14T01:19:13.124Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":5,"timestamp":"2026-09-14T01:19:14.076Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":6,"timestamp":"2026-09-14T01:19:14.332Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":7,"timestamp":"2026-09-14T01:19:14.965Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":8,"timestamp":"2026-09-14T01:19:15.229Z","stepId":"enter-member-id","status":"dispatched"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":9,"timestamp":"2026-09-14T01:19:15.746Z","stepId":"enter-member-id","status":"confirmed"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":10,"timestamp":"2026-09-14T01:19:15.990Z","stepId":"submit-search","status":"dispatched"}
+{"runId":"output-extraction-failure-test-1789348751049-y24o18","seq":11,"timestamp":"2026-09-14T01:19:16.532Z","stepId":"submit-search","status":"confirmed"}

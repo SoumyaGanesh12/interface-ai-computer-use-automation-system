@@ -1,0 +1,9 @@
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":0,"timestamp":"2026-09-14T01:19:19.593Z","stepId":"open-login","status":"dispatched"}
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":1,"timestamp":"2026-09-14T01:19:19.840Z","stepId":"open-login","status":"confirmed"}
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":2,"timestamp":"2026-09-14T01:19:19.960Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":3,"timestamp":"2026-09-14T01:19:20.457Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":4,"timestamp":"2026-09-14T01:19:20.582Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":5,"timestamp":"2026-09-14T01:19:21.236Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":6,"timestamp":"2026-09-14T01:19:21.354Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":7,"timestamp":"2026-09-14T01:19:21.822Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"validation-error-test-1789348759484-nn5sor","seq":8,"timestamp":"2026-09-14T01:19:21.964Z","stepId":"submit-search","status":"dispatched"}

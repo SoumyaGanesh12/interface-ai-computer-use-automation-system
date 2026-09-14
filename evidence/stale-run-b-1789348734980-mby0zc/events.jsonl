@@ -1,0 +1,3 @@
+{"runId":"stale-run-b-1789348734980-mby0zc","seq":0,"timestamp":"2026-09-14T01:18:54.981Z","kind":"run_started","detail":"stale-run-b","inputs":{}}
+{"runId":"stale-run-b-1789348734980-mby0zc","seq":1,"timestamp":"2026-09-14T01:18:55.322Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"stale-run-b-1789348734980-mby0zc","seq":2,"timestamp":"2026-09-14T01:18:55.323Z","kind":"run_finished","detail":"success","result":{"status":"success","capability":"stale-run-b","version":"1.0.0","runId":"stale-run-b-1789348734980-mby0zc","durationMs":343,"locatorTiers":[],"recoveries":[],"drift":[],"humanInterventions":[],"outputs":{}}}

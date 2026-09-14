@@ -1,0 +1,7 @@
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":0,"timestamp":"2026-09-14T01:18:48.932Z","kind":"run_started","detail":"stale-run-a","inputs":{}}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":1,"timestamp":"2026-09-14T01:18:49.944Z","kind":"step_succeeded","stepId":"open-login"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":2,"timestamp":"2026-09-14T01:18:51.908Z","kind":"step_succeeded","stepId":"enter-username"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":3,"timestamp":"2026-09-14T01:18:53.321Z","kind":"step_succeeded","stepId":"enter-password"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":4,"timestamp":"2026-09-14T01:18:54.539Z","kind":"step_succeeded","stepId":"submit-login"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":5,"timestamp":"2026-09-14T01:18:54.938Z","kind":"step_succeeded","stepId":"leave-marker-page"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":6,"timestamp":"2026-09-14T01:18:54.976Z","kind":"run_finished","detail":"success","result":{"status":"success","capability":"stale-run-a","version":"1.0.0","runId":"stale-run-a-1789348728924-zbasl6","durationMs":6044,"locatorTiers":[{"stepId":"enter-username","recordedTier":1,"resolvedTier":1},{"stepId":"enter-password","recordedTier":2,"resolvedTier":2},{"stepId":"submit-login","recordedTier":1,"resolvedTier":1}],"recoveries":[],"drift":[],"humanInterventions":[],"outputs":{}}}

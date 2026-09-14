@@ -1,0 +1,10 @@
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":0,"timestamp":"2026-09-14T01:18:49.069Z","stepId":"open-login","status":"dispatched"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":1,"timestamp":"2026-09-14T01:18:49.921Z","stepId":"open-login","status":"confirmed"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":2,"timestamp":"2026-09-14T01:18:50.769Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":3,"timestamp":"2026-09-14T01:18:51.907Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":4,"timestamp":"2026-09-14T01:18:52.177Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":5,"timestamp":"2026-09-14T01:18:53.239Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":6,"timestamp":"2026-09-14T01:18:53.475Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":7,"timestamp":"2026-09-14T01:18:54.539Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":8,"timestamp":"2026-09-14T01:18:54.802Z","stepId":"leave-marker-page","status":"dispatched"}
+{"runId":"stale-run-a-1789348728924-zbasl6","seq":9,"timestamp":"2026-09-14T01:18:54.937Z","stepId":"leave-marker-page","status":"confirmed"}

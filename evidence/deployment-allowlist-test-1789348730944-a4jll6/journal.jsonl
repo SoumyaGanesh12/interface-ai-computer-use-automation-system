@@ -1,0 +1,7 @@
+{"runId":"deployment-allowlist-test-1789348730944-a4jll6","seq":0,"timestamp":"2026-09-14T01:18:51.119Z","stepId":"open-login","status":"dispatched"}
+{"runId":"deployment-allowlist-test-1789348730944-a4jll6","seq":1,"timestamp":"2026-09-14T01:18:52.077Z","stepId":"open-login","status":"confirmed"}
+{"runId":"deployment-allowlist-test-1789348730944-a4jll6","seq":2,"timestamp":"2026-09-14T01:18:52.407Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"deployment-allowlist-test-1789348730944-a4jll6","seq":3,"timestamp":"2026-09-14T01:18:53.162Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"deployment-allowlist-test-1789348730944-a4jll6","seq":4,"timestamp":"2026-09-14T01:18:53.299Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"deployment-allowlist-test-1789348730944-a4jll6","seq":5,"timestamp":"2026-09-14T01:18:54.248Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"deployment-allowlist-test-1789348730944-a4jll6","seq":6,"timestamp":"2026-09-14T01:18:54.551Z","stepId":"submit-login","status":"dispatched"}

@@ -1,0 +1,12 @@
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":0,"timestamp":"2026-09-14T01:19:02.191Z","stepId":"open-login","status":"dispatched"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":1,"timestamp":"2026-09-14T01:19:02.287Z","stepId":"open-login","status":"confirmed"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":2,"timestamp":"2026-09-14T01:19:02.357Z","stepId":"enter-username","status":"dispatched"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":3,"timestamp":"2026-09-14T01:19:02.609Z","stepId":"enter-username","status":"confirmed"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":4,"timestamp":"2026-09-14T01:19:02.679Z","stepId":"enter-password","status":"dispatched"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":5,"timestamp":"2026-09-14T01:19:03.261Z","stepId":"enter-password","status":"confirmed"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":6,"timestamp":"2026-09-14T01:19:03.342Z","stepId":"submit-login","status":"dispatched"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":7,"timestamp":"2026-09-14T01:19:03.732Z","stepId":"submit-login","status":"confirmed"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":8,"timestamp":"2026-09-14T01:19:03.860Z","stepId":"enter-member-id","status":"dispatched"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":9,"timestamp":"2026-09-14T01:19:04.193Z","stepId":"enter-member-id","status":"confirmed"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":10,"timestamp":"2026-09-14T01:19:04.312Z","stepId":"submit-search","status":"dispatched"}
+{"runId":"order-replacement-card-1789348741918-8x56s1","seq":11,"timestamp":"2026-09-14T01:19:04.793Z","stepId":"submit-search","status":"confirmed"}
