@@ -1,8 +1,11 @@
 /**
  * The one irreversible flow. Tenant b adds a second confirmation step -- a stand-in for
  * "two institutions on the same vendor product, one configured stricter than the other."
- * The fixture does not block a second submission itself: preventing that duplicate is
- * the automation system's job (idempotency probe), not this app's.
+ * The fixture itself is the source of truth for "does this member already have an
+ * order" (see POST /card/order in ../app.ts) -- this page reflects that by omitting the
+ * submit form entirely once one exists, rather than leaving it clickable and relying on
+ * the calling automation's own idempotency probe to be the only thing standing between a
+ * person and a second submission.
  */
 import { page } from '../layout';
 import type { Member } from '../data';
@@ -28,13 +31,16 @@ export function verifyIdentityPage(member: Member, tenant: Tenant): string {
 }
 
 export function confirmOrderPage(member: Member, tenant: Tenant, existingOrder: CardOrder | undefined): string {
-  const notice = existingOrder
-    ? `<div class="notice">A replacement card was already ordered for this member. Reference ${existingOrder.reference}, placed ${existingOrder.orderedAt}.</div>`
-    : '';
+  if (existingOrder) {
+    return page(
+      'Order Replacement Card',
+      `<div class="notice">A replacement card was already ordered for this member. Reference ${existingOrder.reference}, placed ${existingOrder.orderedAt}.</div>`,
+      tenant,
+    );
+  }
   return page(
     'Order Replacement Card',
     `
-${notice}
 <p>Order a replacement card for ${member.name} (${member.id})? This action cannot be undone.</p>
 <form method="post" action="/card/order">
   <input type="hidden" name="id" value="${member.id}">

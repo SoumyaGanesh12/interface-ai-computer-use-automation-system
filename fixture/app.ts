@@ -185,6 +185,10 @@ app.post('/card/order', (req, res) => {
     res.send(notFoundPage(id ?? '', state.tenant));
     return;
   }
-  const order = placeOrder(member.id);
+  // The source of truth for "does this member already have an order" has to be this
+  // handler, not whatever called it: an automation's own precheck only stops that one
+  // caller from double-submitting, it can't stop a second order placed any other way
+  // (a human using this same form, a retried request, a different caller entirely).
+  const order = findOrder(member.id) ?? placeOrder(member.id);
   res.send(orderConfirmedPage(order, state.tenant));
 });

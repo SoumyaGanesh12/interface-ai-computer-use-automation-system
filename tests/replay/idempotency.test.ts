@@ -7,9 +7,17 @@
  * reference, which the assertions below would catch even if the reported output
  * happened to look fine.
  *
- * Also proves the separate, opt-in precheck: a wholly independent later run for a
- * member who already has a completed order -- the idempotency probe alone never covers
- * this, since it only ever activates for a redispatch within the same run.
+ * Also proves a wholly independent later run for a member who already has a completed
+ * order is caught cleanly -- the idempotency probe alone never covers this, since it only
+ * ever activates for a redispatch within the same run. This used to be a separate,
+ * opt-in step-level precheck; it is now the artifact's own top-level "already_ordered"
+ * outcome instead, since the fixture itself (fixture/pages/member.ts, cardOrder.ts) is
+ * the actual source of truth for "does this member already have an order" and stops
+ * offering the entry point once one exists -- the outcome catches this the moment the
+ * member page loads, before the run ever tries to click through to a button that is no
+ * longer there. A step-scoped precheck duplicating the same matcher became genuinely
+ * unreachable once the outcome existed, and validateArtifact's overlap check refuses
+ * exactly that ambiguity rather than silently accepting dead configuration.
  */
 import { readFileSync } from 'node:fs';
 import type { Server } from 'node:http';
@@ -115,12 +123,14 @@ describe('order-replacement-card: at-most-once', () => {
     expect(findOrder('77410')?.reference).toBe(reportedRef);
   }, 30000);
 
-  it('a fresh, separate run for a member who already has an order stops at the precheck, never clicking Confirm Order again', async () => {
+  it('a fresh, separate run for a member who already has an order is caught by the already_ordered outcome, never clicking Confirm Order again', async () => {
     // Depends on the first test above having already placed a real order for 20957 --
     // this is deliberately a second, wholly separate replay() call (a fresh `dispatched`
     // Set, exactly like a later, independent invocation), which the in-run idempotency
     // probe alone would never catch: it only ever activates for a redispatch attempt
-    // within the same run. Proving this needs the precheck to have fired instead.
+    // within the same run. Proving this needs the top-level outcome to have fired
+    // instead, from the member page itself -- well before the run would otherwise reach
+    // (and fail to click) the now-absent "Order Replacement Card" entry point.
     const before = findOrder('20957')?.reference;
     expect(before).toMatch(/^REF-\d+$/);
 

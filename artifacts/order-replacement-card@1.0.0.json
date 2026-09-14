@@ -34,7 +34,8 @@
         "transform": "regexCapture",
         "pattern": "REF-\\d+"
       },
-      "description": "The durable confirmation reference returned once the card order is placed."
+      "description": "The durable confirmation reference returned once the card order is placed.",
+      "redact": false
     }
   ],
   "steps": [
@@ -118,8 +119,11 @@
         "target": { "recordedTier": 3, "candidates": [{ "tier": 3, "confidence": 0.6, "note": "A <td onclick>, not a real button -- its Chrome role is a table cell, so only visible text finds it. Scoped to the content frame: the nav frame's 'Search Members' link also contains 'Search'.", "locator": { "strategy": "visibleText", "text": "Search", "framePath": ["content"] } }] }
       },
       "checkpoint": {
-        "kind": "nodeExists",
-        "target": { "recordedTier": 3, "candidates": [{ "tier": 3, "confidence": 0.6, "note": "The action link, once the member is found.", "locator": { "strategy": "visibleText", "text": "Order Replacement Card" } }] }
+        "kind": "any",
+        "of": [
+          { "kind": "nodeExists", "target": { "recordedTier": 3, "candidates": [{ "tier": 3, "confidence": 0.6, "note": "The action link, once the member is found.", "locator": { "strategy": "visibleText", "text": "Order Replacement Card" } }] } },
+          { "kind": "textPresent", "scope": "page", "pattern": "already ordered" }
+        ]
       },
       "risk": "safe"
     },
@@ -132,8 +136,11 @@
         "target": { "recordedTier": 3, "candidates": [{ "tier": 3, "confidence": 0.6, "note": "Another onclick span, not a real link or button.", "locator": { "strategy": "visibleText", "text": "Order Replacement Card" } }] }
       },
       "checkpoint": {
-        "kind": "nodeExists",
-        "target": { "recordedTier": 1, "candidates": [{ "tier": 1, "confidence": 0.9, "note": "A real <button> on the confirmation screen.", "locator": { "strategy": "roleAndName", "role": "button", "name": "Confirm Order" } }] }
+        "kind": "any",
+        "of": [
+          { "kind": "nodeExists", "target": { "recordedTier": 1, "candidates": [{ "tier": 1, "confidence": 0.9, "note": "A real <button> on the confirmation screen.", "locator": { "strategy": "roleAndName", "role": "button", "name": "Confirm Order" } }] } },
+          { "kind": "textPresent", "scope": "page", "pattern": "already ordered" }
+        ]
       },
       "risk": "safe"
     },
@@ -154,11 +161,6 @@
         "probe": { "kind": "textPresent", "scope": "page", "pattern": "already ordered" },
         "key": "{{memberId}}",
         "navigateTo": "http://localhost:4400/member?id={{memberId}}"
-      },
-      "precheck": {
-        "detect": { "kind": "textPresent", "scope": "page", "pattern": "already ordered" },
-        "code": "already_ordered",
-        "message": "A replacement card has already been ordered for this member; not placing a duplicate order."
       }
     }
   ],
@@ -167,6 +169,11 @@
       "code": "member_not_found",
       "detect": { "kind": "textPresent", "scope": "page", "pattern": "No member found" },
       "message": "No member was found for the given ID."
+    },
+    {
+      "code": "already_ordered",
+      "detect": { "kind": "textPresent", "scope": "page", "pattern": "already ordered" },
+      "message": "A replacement card has already been ordered for this member; not placing a duplicate order."
     }
   ],
   "recovery": [],
