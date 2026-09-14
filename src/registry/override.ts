@@ -29,9 +29,17 @@ export function applyOverride(base: Artifact, override: TenantOverride): ApplyOv
     return { ok: false, reason: `override targets ${override.baseCapabilityId}@${override.baseSemver}, but the given base artifact is ${base.capability.id}@${base.capability.semver}` };
   }
 
-  const baseIds = new Set(base.steps.map((s) => s.id));
-  for (const id of Object.keys(override.stepReplacements)) {
-    if (!baseIds.has(id)) return { ok: false, reason: `override references step id "${id}", which does not exist in the base artifact -- refusing rather than silently ignoring it` };
+  const baseById = new Map(base.steps.map((s) => [s.id, s]));
+  for (const [id, replacement] of Object.entries(override.stepReplacements)) {
+    const baseStep = baseById.get(id);
+    if (!baseStep) return { ok: false, reason: `override references step id "${id}", which does not exist in the base artifact -- refusing rather than silently ignoring it` };
+    // A tenant override adapts *how* a step is performed (locators, labels), never *how
+    // risky* it is: letting an override upgrade a step to irreversible (or downgrade one
+    // away from it) would make the override mechanism a privilege-escalation path around
+    // whatever risk/approval gating the base artifact was reviewed under.
+    if (replacement.risk !== baseStep.risk) {
+      return { ok: false, reason: `override for step "${id}" changes risk from "${baseStep.risk}" to "${replacement.risk}" -- an override may not change a step's risk` };
+    }
   }
 
   const steps = base.steps.map((s) => override.stepReplacements[s.id] ?? s);

@@ -71,6 +71,19 @@ describe('applyOverride', () => {
     expect(result).toEqual({ ok: false, reason: expect.stringContaining('no-such-step') });
   });
 
+  it('refuses an override that escalates a safe step to irreversible -- not a privilege-escalation path around risk/approval gating', () => {
+    const base = loadRetargetedBase(baseUrl);
+    const safeStep = base.steps.find((s) => s.risk === 'safe');
+    if (!safeStep) throw new Error('expected at least one safe step on the base artifact');
+    const result = applyOverride(base, {
+      baseCapabilityId: base.capability.id,
+      baseSemver: base.capability.semver,
+      variant: 'b',
+      stepReplacements: { [safeStep.id]: { ...safeStep, risk: 'irreversible' } },
+    });
+    expect(result).toEqual({ ok: false, reason: expect.stringContaining('risk') });
+  });
+
   it('the unmodified base artifact genuinely fails against tenant b -- proving the override is necessary', async () => {
     const base = loadRetargetedBase(baseUrl);
     const result = await replay(base, { memberId: '41382' }, { surface, runId: generateRunId(base.capability.id), lease: new RunLease(), operatorChannel: new ConsoleOperatorChannel() });
