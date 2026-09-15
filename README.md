@@ -6,12 +6,12 @@ reviewable description of the flow. From then on, the capability replays
 **deterministically**, with no model anywhere in the decision loop, escalating to a
 human only when it genuinely can't proceed safely on its own.
 
-**[Demo video](https://drive.google.com/file/d/1wQNFymbY6tZKZTGWGg1n5kdZbf6BcUE5/view?usp=sharing)**
-
 ```
 discover  →  compile  →  replay (no model)  →  escalate on demand
   LLM          artifact       executor            human takeover
 ```
+
+Watch a short demo of it in action: [demo video](https://drive.google.com/file/d/1wQNFymbY6tZKZTGWGg1n5kdZbf6BcUE5/view?usp=sharing).
 
 ## What it does
 
