@@ -18,7 +18,7 @@ ${errorHtml}
     <tr>
       <td>${label}</td>
       <td><input type="text" name="id" form="_f"></td>
-      <td><span class="actionCell" onclick="document.getElementById('_f').submit()">Search</span></td>
+      <td><span class="actionCell primary" onclick="document.getElementById('_f').submit()">Search</span></td>
     </tr>
   </table>
 </form>

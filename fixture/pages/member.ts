@@ -16,7 +16,7 @@ export function memberPage(member: Member, tenant: Tenant, existingOrder: CardOr
   // invites the click that leads there.
   const orderSection = existingOrder
     ? `<div class="notice">A replacement card was already ordered for this member. Reference ${existingOrder.reference}, placed ${existingOrder.orderedAt}.</div>`
-    : `<p><span class="actionCell" onclick="location.href='/card/order?id=${member.id}'">Order Replacement Card</span></p>`;
+    : `<p><span class="actionCell primary" onclick="location.href='/card/order?id=${member.id}'">Order Replacement Card</span></p>`;
   return page(
     'Member Detail',
     `

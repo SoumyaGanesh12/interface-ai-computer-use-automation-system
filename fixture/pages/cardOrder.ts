@@ -22,7 +22,7 @@ export function verifyIdentityPage(member: Member, tenant: Tenant): string {
   <input type="hidden" name="verified" value="1">
   <table class="fld">
     <tr><td><input type="checkbox" id="chk" checked></td><td><label for="chk">Identity verified</label></td></tr>
-    <tr><td colspan="2"><button type="submit">Continue</button></td></tr>
+    <tr><td colspan="2"><button type="submit" class="primary">Continue</button></td></tr>
   </table>
 </form>
 `,
@@ -44,7 +44,7 @@ export function confirmOrderPage(member: Member, tenant: Tenant, existingOrder: 
 <p>Order a replacement card for ${member.name} (${member.id})? This action cannot be undone.</p>
 <form method="post" action="/card/order">
   <input type="hidden" name="id" value="${member.id}">
-  <button type="submit">Confirm Order</button>
+  <button type="submit" class="primary">Confirm Order</button>
 </form>
 `,
     tenant,

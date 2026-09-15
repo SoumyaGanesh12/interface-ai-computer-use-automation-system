@@ -7,10 +7,14 @@ import { page } from '../layout';
 import type { Tenant } from '../session';
 
 export function frameShell(): string {
+  // frameborder/framespacing/border=0 only suppress the browser's native 3D
+  // bevel between frames -- purely presentational HTML attributes, not a
+  // structural change; the two frames, their names, and src routes are
+  // unchanged, so nothing a locator's framePath depends on is affected.
   return `<!doctype html>
 <html>
 <head><title>Member Services Console</title></head>
-<frameset cols="140,*">
+<frameset cols="170,*" frameborder="0" framespacing="0" border="0">
   <frame name="nav" src="/nav">
   <frame name="content" src="/search">
 </frameset>
@@ -27,5 +31,6 @@ export function navPage(tenant: Tenant): string {
 </table>
 `,
     tenant,
+    { bannerText: 'MENU', sidebar: true },
   );
 }
